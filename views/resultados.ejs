@@ -1,41 +1,24 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados - Gmail AI Cleaner</title>
-    <meta name="description" content="Resultados de la limpieza de Gmail con IA">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background: #0a0a0f;
-            color: #e0e0e0;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #ea4335, #4285f4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-<body>
-    <div class="min-h-screen p-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="glass p-8" id="resultados-card">
-                <h1 class="text-2xl font-bold gradient-text mb-4">📊 Resultados de la limpieza</h1>
-                <div id="resultados" class="space-y-2">
-                    <p class="text-gray-400">No hay operaciones pendientes.</p>
-                </div>
-                <a href="/" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">← Volver al inicio</a>
-            </div>
-        </div>
+<%- include('partials/header') %>
+
+<main style="max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
+  <section class="md-card md-card-elevated-1" id="resultadosCard">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+      <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 28px;">insights</span>
+      <h1 style="font-size: 22px; font-weight: 500; margin: 0; color: var(--md-on-surface);">
+        Resultados de la limpieza
+      </h1>
     </div>
-</body>
-</html>
+
+    <div id="resultadosDetalle" style="padding: 24px; background: var(--md-surface-variant); border-radius: var(--md-shape-md); border: 1px solid var(--md-outline);">
+      <p style="color: var(--md-on-surface-variant); margin: 0 0 16px 0;">
+        Puedes regresar al panel principal para buscar y analizar correos en tu bandeja de entrada.
+      </p>
+      <a href="/" class="md-btn md-btn-filled-primary">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span>Volver a la Bandeja Principal</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

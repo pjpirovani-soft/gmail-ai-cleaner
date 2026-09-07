@@ -1,239 +1,250 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gmail AI Cleaner</title>
-    <meta name="description" content="Analizador y limpiador inteligente de correos de Gmail con IA">
-    <meta property="og:title" content="Gmail AI Cleaner">
-    <meta property="og:description" content="Analizador y limpiador inteligente de correos de Gmail con IA">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            background: #0a0a0f;
-            color: #e0e0e0;
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #ea4335, #4285f4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .badge-eliminar { background: #ea4335; color: white; }
-        .badge-archivar { background: #fbbc04; color: #1a1a1a; }
-        .badge-conservar { background: #34a853; color: white; }
-    </style>
-</head>
-<body>
-    <div class="min-h-screen p-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="glass p-8" id="main-container">
-                <div class="flex items-center gap-3 mb-8" id="header-section">
-                    <span class="text-3xl">📬</span>
-                    <h1 class="text-3xl font-bold gradient-text">Gmail AI Cleaner</h1>
-                    <span class="ml-auto text-sm text-gray-400">v1.0</span>
-                </div>
+<%- include('partials/header') %>
 
-                <div class="glass p-6 mb-6" id="search-card">
-                    <h2 class="text-xl font-semibold mb-4">🔍 Buscar y analizar correos</h2>
-                    <form id="searchForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Filtro de búsqueda</label>
-                            <input type="text" 
-                                   id="queryInput" 
-                                   name="query" 
-                                   placeholder="Ej: older_than:1y, from:newsletter, larger:10M"
-                                   class="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                            <p class="text-xs text-gray-500 mt-1">
-                                💡 Ejemplos: <span class="text-blue-400 cursor-pointer" onclick="setFilter('older_than:1y')">older_than:1y</span> · 
-                                <span class="text-blue-400 cursor-pointer" onclick="setFilter('from:newsletter')">from:newsletter</span> · 
-                                <span class="text-blue-400 cursor-pointer" onclick="setFilter('larger:10M')">larger:10M</span>
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Límite de correos</label>
-                            <input type="number" 
-                                   id="limiteInput" 
-                                   name="limite" 
-                                   value="10" 
-                                   min="1" 
-                                   max="100"
-                                   class="w-24 bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
-                        </div>
-                        <button type="submit" 
-                                id="analizarBtn"
-                                class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition-colors cursor-pointer">
-                            🔍 Analizar
-                        </button>
-                    </form>
-                </div>
+<main style="max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
 
-                <!-- Resultados -->
-                <div id="resultadosContainer" class="hidden">
-                    <div class="glass p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-semibold">📊 Resultados</h2>
-                            <span id="totalCorreos" class="text-sm text-gray-400"></span>
-                        </div>
-                        
-                        <!-- Tabla -->
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="text-left py-2 px-3">Asunto</th>
-                                        <th class="text-left py-2 px-3">Remitente</th>
-                                        <th class="text-left py-2 px-3">Recomendación</th>
-                                        <th class="text-left py-2 px-3">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaCorreos">
-                                    <!-- Los correos se inyectan aquí con JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Modos de ejecución -->
-                        <div class="flex flex-wrap gap-3 mt-6">
-                            <button id="btnSimular" onclick="ejecutarLimpieza('simulacion')" 
-                                    class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
-                                🔍 Simular
-                            </button>
-                            <button id="btnAutomatico" onclick="ejecutarLimpieza('automatico')" 
-                                    class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
-                                🚀 Ejecutar automático
-                            </button>
-                            <button id="btnInteractivo" onclick="ejecutarLimpieza('interactivo')" 
-                                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
-                                🔄 Modo interactivo
-                            </button>
-                        </div>
-
-                        <div id="resultadosLimpieza" class="mt-6"></div>
-                    </div>
-                </div>
-            </div>
+  <!-- Welcome / Intro Section (Material Design 3) -->
+  <section class="md-card md-card-elevated-1" id="welcomeSection" style="margin-bottom: 24px; background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 6px; background-color: var(--md-primary-container); color: var(--md-on-primary-container); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--md-shape-full); margin-bottom: 12px;">
+          <span class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
+          <span>Potenciado con Gemini AI</span>
         </div>
+        <h1 style="font-size: 28px; font-weight: 500; margin: 0 0 8px 0; color: var(--md-on-surface); letter-spacing: -0.3px;">
+          Organiza tu bandeja de entrada con IA
+        </h1>
+        <p style="font-size: 15px; color: var(--md-on-surface-variant); margin: 0; max-width: 650px;">
+          Usa la inteligencia artificial para clasificar y limpiar tus correos de forma segura, reduciendo el desorden digital en segundos.
+        </p>
+      </div>
+
+      <!-- Quick Status Pill -->
+      <div style="display: flex; align-items: center; gap: 8px; background: var(--md-surface); border: 1px solid var(--md-outline); padding: 8px 16px; border-radius: var(--md-shape-full); font-size: 13px; color: var(--md-on-surface);">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--md-secondary); display: inline-block;"></span>
+        <span>Modo Seguro: Vista previa y confirmación activa</span>
+      </div>
     </div>
 
-    <script>
-    // Establecer filtro de ejemplo
-    function setFilter(value) {
-        document.getElementById('queryInput').value = value;
-    }
+    <!-- Quick Filter Chips -->
+    <div style="margin-top: 20px;">
+      <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--md-on-surface-variant); display: block; margin-bottom: 8px;">
+        Filtros rápidos recomendados:
+      </span>
+      <div class="md-chip-group">
+        <button type="button" class="md-chip md-chip-filter" data-filter="older_than:1y" onclick="setFilter('older_than:1y')">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">calendar_today</span>
+          <span>📅 Correos antiguos</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="from:newsletter" onclick="setFilter('from:newsletter')">
+          <span class="material-symbols-outlined" style="color: var(--md-tertiary-hover);">newspaper</span>
+          <span>📰 Newsletters</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="larger:10M" onclick="setFilter('larger:10M')">
+          <span class="material-symbols-outlined" style="color: var(--md-error);">attachment</span>
+          <span>📎 Correos pesados (>10MB)</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="from:ofertas" onclick="setFilter('from:ofertas')">
+          <span class="material-symbols-outlined" style="color: var(--md-secondary);">sell</span>
+          <span>🏷️ Promociones caducadas</span>
+        </button>
+      </div>
+    </div>
+  </section>
 
-    // Manejar el formulario de búsqueda
-    document.getElementById('searchForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const query = document.getElementById('queryInput').value;
-        const limite = document.getElementById('limiteInput').value;
-        const btn = document.getElementById('analizarBtn');
-        
-        btn.disabled = true;
-        btn.textContent = '⏳ Analizando...';
-        
-        try {
-            const formData = new FormData();
-            formData.append('query', query);
-            formData.append('limite', limite);
-            
-            const response = await fetch('/analizar', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-            
-            if (data.correos && data.correos.length > 0) {
-                mostrarCorreos(data.correos);
-                document.getElementById('resultadosContainer').classList.remove('hidden');
-                document.getElementById('totalCorreos').textContent = `Total: ${data.total} correos`;
-            } else {
-                alert(data.mensaje || 'No se encontraron correos.');
-            }
-            
-        } catch (error) {
-            alert('Error al conectar con el servidor: ' + error.message);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '🔍 Analizar';
-        }
-    });
+  <!-- Search & Analysis Card -->
+  <section class="md-card md-card-elevated-1" id="searchCard" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+      <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 24px;">search</span>
+      <h2 style="font-size: 18px; font-weight: 500; margin: 0; color: var(--md-on-surface);">
+        Buscar y analizar correos
+      </h2>
+    </div>
 
-    function mostrarCorreos(correos) {
-        const tbody = document.getElementById('tablaCorreos');
-        tbody.innerHTML = '';
-        
-        correos.forEach(correo => {
-            const tr = document.createElement('tr');
-            tr.className = 'border-b border-gray-700/50 hover:bg-white/5';
-            
-            const badgeClass = {
-                'Eliminar': 'badge-eliminar',
-                'Archivar': 'badge-archivar',
-                'Conservar': 'badge-conservar'
-            }[correo.clasificacion] || 'bg-gray-500';
-            
-            tr.innerHTML = `
-                <td class="py-2 px-3">${correo.asunto || 'Sin asunto'}</td>
-                <td class="py-2 px-3 text-gray-400">${correo.remitente || 'Desconocido'}</td>
-                <td class="py-2 px-3">
-                    <span class="badge ${badgeClass} text-xs px-2 py-1 rounded-full">${correo.clasificacion}</span>
-                </td>
-                <td class="py-2 px-3">
-                    <span class="text-xs text-gray-500">${correo.id ? correo.id.slice(0, 8) : ''}...</span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+    <form id="searchForm">
+      <div style="display: grid; grid-template-columns: 1fr 140px auto; gap: 16px; align-items: flex-start;">
+        <!-- Floating label search input -->
+        <div class="md-text-field">
+          <div class="md-input-wrapper">
+            <input type="text" 
+                   id="queryInput" 
+                   name="query" 
+                   placeholder=" " 
+                   class="md-input" 
+                   value="older_than:1y" 
+                   autocomplete="off" 
+                   required>
+            <label for="queryInput" class="md-floating-label">Filtro de búsqueda (Gmail syntax)</label>
+          </div>
+          <div class="md-helper-text">
+            <span class="material-symbols-outlined" style="font-size: 14px;">lightbulb</span>
+            <span>Ejemplos: older_than:1y, from:newsletter, larger:10M</span>
+          </div>
+        </div>
 
-    async function ejecutarLimpieza(modo) {
-        const resultadosDiv = document.getElementById('resultadosLimpieza');
-        resultadosDiv.innerHTML = '<p class="text-gray-400">⏳ Procesando...</p>';
-        
-        try {
-            const formData = new FormData();
-            formData.append('modo', modo);
-            
-            const response = await fetch('/limpiar', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                resultadosDiv.innerHTML = `<p class="text-red-400">❌ ${data.error}</p>`;
-                return;
-            }
-            
-            // Mostrar resultados
-            let html = '<div class="mt-4 p-4 bg-black/30 rounded-lg"><h4 class="font-semibold mb-2">📋 Resumen</h4>';
-            data.resultados.forEach(r => {
-                const icon = r.accion.includes('Eliminar') ? '🗑️' : 
-                            r.accion.includes('Archivar') ? '📁' : '✅';
-                html += `<p class="text-sm my-1">${icon} ${(r.asunto || '').slice(0, 50)} → ${r.accion} <span class="text-gray-500">(${r.estado})</span></p>`;
-            });
-            html += '</div>';
-            resultadosDiv.innerHTML = html;
-            
-        } catch (error) {
-            resultadosDiv.innerHTML = `<p class="text-red-400">❌ Error: ${error.message}</p>`;
-        }
-    }
-    </script>
-</body>
-</html>
+        <!-- Limit input -->
+        <div class="md-text-field">
+          <div class="md-input-wrapper">
+            <input type="number" 
+                   id="limiteInput" 
+                   name="limite" 
+                   placeholder=" " 
+                   class="md-input has-value" 
+                   value="10" 
+                   min="1" 
+                   max="100" 
+                   required>
+            <label for="limiteInput" class="md-floating-label">Límite</label>
+          </div>
+          <div class="md-helper-text">
+            <span>Máx. 100</span>
+          </div>
+        </div>
+
+        <!-- Elevated Analyze Button -->
+        <button type="submit" id="analizarBtn" class="md-btn md-btn-filled-primary" style="height: 52px; padding: 0 28px;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">smart_toy</span>
+          <span>Analizar</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Linear Progress Bar (Material 3) -->
+    <div class="md-progress-container" id="progressContainer">
+      <div class="md-progress-header">
+        <span id="progressText">Analizando correo 1 de 10 con Gemini...</span>
+        <span style="color: var(--md-primary); font-weight: 600;">Procesando</span>
+      </div>
+      <div class="md-linear-progress">
+        <div class="md-linear-progress-bar" id="progressBar" style="width: 25%;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section id="resultadosContainer" class="hidden">
+    
+    <!-- Summary Indicator Cards (M3 Elevated Cards) -->
+    <div class="md-summary-grid" id="summaryGrid">
+      
+      <!-- Card Red: Para Eliminar -->
+      <div class="md-indicator-card red" id="cardEliminar">
+        <div class="md-indicator-icon-wrapper">
+          <span class="material-symbols-outlined">delete_sweep</span>
+        </div>
+        <div>
+          <div class="md-indicator-value" id="badgeEliminar">0</div>
+          <div class="md-indicator-label">Para eliminar</div>
+        </div>
+      </div>
+
+      <!-- Card Yellow: Para Archivar -->
+      <div class="md-indicator-card yellow" id="cardArchivar">
+        <div class="md-indicator-icon-wrapper">
+          <span class="material-symbols-outlined">archive</span>
+        </div>
+        <div>
+          <div class="md-indicator-value" id="badgeArchivar">0</div>
+          <div class="md-indicator-label">Para archivar</div>
+        </div>
+      </div>
+
+      <!-- Card Green: Para Conservar -->
+      <div class="md-indicator-card green" id="cardConservar">
+        <div class="md-indicator-icon-wrapper">
+          <span class="material-symbols-outlined">mark_email_read</span>
+        </div>
+        <div>
+          <div class="md-indicator-value" id="badgeConservar">0</div>
+          <div class="md-indicator-label">Para conservar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table Container (Material 3) -->
+    <div class="md-table-container" id="tableContainer">
+      <div style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--md-outline);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 500; color: var(--md-on-surface);">
+            Bandeja clasificada
+          </h3>
+          <span id="selectedCountText" style="font-size: 13px; color: var(--md-primary); font-weight: 500;"></span>
+        </div>
+        <div id="totalCorreosText" style="font-size: 13px; color: var(--md-on-surface-variant);"></div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x: auto;">
+        <table class="md-table" id="tablaCorreosTable">
+          <thead>
+            <tr>
+              <th style="width: 44px; text-align: center;">
+                <input type="checkbox" id="selectAllCheckbox" class="md-checkbox" aria-label="Seleccionar todos los correos">
+              </th>
+              <th>Asunto</th>
+              <th>Remitente</th>
+              <th>Recomendación</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCorreos">
+            <!-- Dynamic rows rendered by script.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Bar -->
+      <div class="md-pagination" id="paginationBar">
+        <span>Filas por página:</span>
+        <select id="pageSizeSelect" class="md-select" style="height: 28px; width: 60px; padding: 0 4px;">
+          <option value="5" selected>5</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+        </select>
+        <span id="pageRangeText" style="margin-left: 12px;">1–5 de 10</span>
+        <button type="button" id="prevPageBtn" class="md-pagination-btn" aria-label="Página anterior" disabled>
+          <span class="material-symbols-outlined" style="font-size: 20px;">chevron_left</span>
+        </button>
+        <button type="button" id="nextPageBtn" class="md-pagination-btn" aria-label="Página siguiente">
+          <span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Action Buttons Bar (Material 3 Elevated Buttons) -->
+    <div class="md-actions-bar" id="actionsBar">
+      <button type="button" id="btnEliminarSeleccionados" class="md-btn md-btn-filled-error" disabled>
+        <span class="material-symbols-outlined">delete</span>
+        <span>Eliminar seleccionados</span>
+      </button>
+
+      <button type="button" id="btnArchivarSeleccionados" class="md-btn md-btn-filled-tertiary" disabled>
+        <span class="material-symbols-outlined">archive</span>
+        <span>Archivar seleccionados</span>
+      </button>
+
+      <div style="flex-grow: 1;"></div>
+
+      <button type="button" id="btnSimular" onclick="ejecutarLimpieza('simulacion')" class="md-btn md-btn-tonal">
+        <span class="material-symbols-outlined">visibility</span>
+        <span>Simular</span>
+      </button>
+
+      <button type="button" id="btnAutomatico" onclick="ejecutarLimpieza('automatico')" class="md-btn md-btn-filled-secondary">
+        <span class="material-symbols-outlined">bolt</span>
+        <span>Ejecutar automático</span>
+      </button>
+
+      <button type="button" id="btnInteractivo" onclick="ejecutarLimpieza('interactivo')" class="md-btn md-btn-filled-primary">
+        <span class="material-symbols-outlined">published_with_changes</span>
+        <span>Modo interactivo</span>
+      </button>
+    </div>
+
+    <!-- Dynamic execution summary results container -->
+    <div id="resultadosLimpieza"></div>
+
+  </section>
+
+</main>
+
+<%- include('partials/footer') %>

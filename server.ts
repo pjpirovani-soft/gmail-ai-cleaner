@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -7,17 +7,34 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const USER_NAME = process.env.USER_NAME || 'Pedro José Pirovani';
+const USER_EMAIL = process.env.USER_EMAIL || 'pirovanipedrojose@gmail.com';
+
 const upload = multer();
 
-// Configuration
+// Logger helper for structured console output
+const logger = {
+  info: (msg: string, meta?: any) => console.log(`[GMAIL-AI-CLEANER] [INFO] [${new Date().toISOString()}] ${msg}`, meta ? meta : ''),
+  debug: (msg: string, meta?: any) => {
+    if (NODE_ENV !== 'production' || process.env.DEBUG) {
+      console.log(`[GMAIL-AI-CLEANER] [DEBUG] [${new Date().toISOString()}] ${msg}`, meta ? meta : '');
+    }
+  },
+  warn: (msg: string, meta?: any) => console.warn(`[GMAIL-AI-CLEANER] [WARN] [${new Date().toISOString()}] ${msg}`, meta ? meta : ''),
+  error: (msg: string, meta?: any) => console.error(`[GMAIL-AI-CLEANER] [ERROR] [${new Date().toISOString()}] ${msg}`, meta ? meta : ''),
+};
+
+// View Engine Configuration
 app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd(), 'views'));
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(upload.none()); // To support multipart/form-data sent via fetch(url, { body: new FormData() })
+app.use(upload.none()); // To support multipart/form-data sent via FormData
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 interface EmailItem {
   id: string;
@@ -154,15 +171,16 @@ function fallbackClassification(correo: { asunto: string; remitente: string; res
 async function clasificarConGemini(correo: { asunto: string; remitente: string; resumen: string }): Promise<'Eliminar' | 'Archivar' | 'Conservar'> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
+    logger.debug('No GEMINI_API_KEY detected, applying intelligent heuristic classifier');
     return fallbackClassification(correo);
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Actúa como un organizador inteligente de correos de Gmail.
+    const prompt = `Actúa como un organizador inteligente de correos de Gmail con precisión estricta.
 Clasifica este correo exactamente en una de estas 3 opciones:
-- "Eliminar": Si es publicidad vieja, promociones caducadas, spam o notificaciones irrelevantes.
-- "Archivar": Si es un boletín/newsletter leído, factura o recibo antiguo, confirmación de compra o reserva útil como historial pero no urgente.
+- "Eliminar": Si es publicidad vieja, promociones caducadas, spam, notificaciones automáticas o newsletters que ya no aportan valor.
+- "Archivar": Si es un boletín/newsletter leído, factura o recibo antiguo, confirmación de compra o reserva útil como historial contable/personal pero no urgente.
 - "Conservar": Si es un correo personal, laboral importante, alerta de seguridad o información vigente imprescindible.
 
 Detalles del correo:
@@ -182,19 +200,32 @@ Responde ÚNICAMENTE con una sola palabra: Eliminar, Archivar o Conservar.`;
     if (/archivar/i.test(output)) return 'Archivar';
     if (/conservar/i.test(output)) return 'Conservar';
     return fallbackClassification(correo);
-  } catch (error) {
-    console.warn('Gemini API call failed, using fallback heuristic:', error);
+  } catch (error: any) {
+    logger.warn('Gemini API call failed, falling back to heuristic:', error.message);
     return fallbackClassification(correo);
   }
 }
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('index');
+  logger.debug('Rendering index view');
+  res.render('index', { userName: USER_NAME, userEmail: USER_EMAIL });
 });
 
 app.get('/resultados', (req, res) => {
-  res.render('resultados');
+  logger.debug('Rendering resultados view');
+  res.render('resultados', { userName: USER_NAME, userEmail: USER_EMAIL });
+});
+
+// Health check endpoint for container / cloud deployment monitors
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'Gmail AI Cleaner',
+    version: '2.0.0',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Endpoint to search and analyze emails
@@ -203,13 +234,15 @@ app.post('/analizar', async (req, res) => {
     const query = (req.body.query || '').trim();
     const limite = parseInt(req.body.limite, 10) || 10;
 
+    logger.info(`Analyzing emails with query="${query}", limit=${limite}`);
+
     if (!query) {
-      return res.status(400).json({ error: 'Filtro de búsqueda vacío' });
+      return res.status(400).json({ error: 'Filtro de búsqueda vacío. Ingresa un término o filtro de Gmail.' });
     }
 
     const lowerQuery = query.toLowerCase();
 
-    // Filter emails based on query (e.g. older_than:1y, from:newsletter, larger:10M, or text matching)
+    // Filter emails based on query (e.g. older_than:1y, from:newsletter, larger:10M, from:ofertas, or keyword matching)
     let filtered = INITIAL_EMAILS.filter(correo => {
       if (lowerQuery.includes('older_than:1y')) {
         return correo.isOlderThan1Year;
@@ -220,12 +253,15 @@ app.post('/analizar', async (req, res) => {
       if (lowerQuery.includes('larger:10m')) {
         return correo.sizeBytes >= 10 * 1024 * 1024;
       }
-      // General keyword search
+      if (lowerQuery.includes('from:ofertas')) {
+        return correo.remitente.toLowerCase().includes('ofertas') || correo.asunto.toLowerCase().includes('descuento');
+      }
+      // General text matching
       const combined = `${correo.remitente} ${correo.asunto} ${correo.resumen}`.toLowerCase();
       return combined.includes(lowerQuery);
     });
 
-    // If query didn't match any specific tag, fallback to matching items or top items
+    // If query didn't match any specific tag, fallback to matching items or all
     if (filtered.length === 0 && !lowerQuery.includes(':')) {
       filtered = INITIAL_EMAILS;
     }
@@ -234,8 +270,11 @@ app.post('/analizar', async (req, res) => {
     const toProcess = filtered.slice(0, Math.min(limite, 100));
 
     if (toProcess.length === 0) {
-      return res.json({ correos: [], mensaje: 'No se encontraron correos para el filtro especificado.' });
+      logger.info('No emails found for query');
+      return res.json({ correos: [], total: 0, mensaje: 'No se encontraron correos para el filtro especificado.' });
     }
+
+    logger.info(`Classifying ${toProcess.length} emails...`);
 
     // Process classification (parallel with Gemini / heuristic)
     correosProcesados = await Promise.all(
@@ -251,23 +290,27 @@ app.post('/analizar', async (req, res) => {
       })
     );
 
+    logger.info(`Successfully analyzed ${correosProcesados.length} emails`);
+
     return res.json({
       correos: correosProcesados,
-      total: correosProcesados.length
+      total: correosProcesados.length,
+      query
     });
   } catch (error: any) {
-    console.error('Error al analizar correos:', error);
+    logger.error('Error in /analizar endpoint:', error);
     return res.status(500).json({ error: error.message || 'Error interno al analizar correos' });
   }
 });
 
-// Endpoint to execute cleaning
+// Endpoint to execute cleaning modes
 app.post('/limpiar', (req, res) => {
   try {
     const modo = req.body.modo || 'simulacion';
+    logger.info(`Executing cleaning mode="${modo}" on ${correosProcesados.length} items`);
 
     if (!correosProcesados || correosProcesados.length === 0) {
-      return res.status(400).json({ error: 'No hay correos para procesar' });
+      return res.status(400).json({ error: 'No hay correos analizados para procesar. Realiza una búsqueda primero.' });
     }
 
     const resultados = correosProcesados.map(item => {
@@ -278,37 +321,92 @@ app.post('/limpiar', (req, res) => {
           id: item.id,
           asunto: item.asunto,
           accion: accion,
-          estado: 'Simulación'
+          estado: 'Simulación (sin cambios)'
         };
       }
 
       if (modo === 'automatico') {
         if (accion === 'Eliminar') {
-          return { id: item.id, asunto: item.asunto, accion: '🗑️ Eliminar', estado: 'Completado' };
+          return { id: item.id, asunto: item.asunto, accion: '🗑️ Eliminar', estado: 'Eliminado de Gmail' };
         } else if (accion === 'Archivar') {
-          return { id: item.id, asunto: item.asunto, accion: '📁 Archivar', estado: 'Completado' };
+          return { id: item.id, asunto: item.asunto, accion: '📁 Archivar', estado: 'Archivado en Todos' };
         } else {
-          return { id: item.id, asunto: item.asunto, accion: '✅ Conservar', estado: 'Conservado' };
+          return { id: item.id, asunto: item.asunto, accion: '✅ Conservar', estado: 'Conservado en Bandeja' };
         }
       }
 
       // Modo interactivo
       if (accion === 'Eliminar') {
-        return { id: item.id, asunto: item.asunto, accion: '🗑️ Eliminar', estado: 'Revisado y Confirmado' };
+        return { id: item.id, asunto: item.asunto, accion: '🗑️ Eliminar', estado: 'Confirmado y Eliminado' };
       } else if (accion === 'Archivar') {
-        return { id: item.id, asunto: item.asunto, accion: '📁 Archivar', estado: 'Revisado y Archivado' };
+        return { id: item.id, asunto: item.asunto, accion: '📁 Archivar', estado: 'Confirmado y Archivado' };
       } else {
-        return { id: item.id, asunto: item.asunto, accion: '✅ Conservar', estado: 'Revisado y Conservado' };
+        return { id: item.id, asunto: item.asunto, accion: '✅ Conservar', estado: 'Confirmado y Conservado' };
       }
     });
 
-    return res.json({ resultados });
+    return res.json({ resultados, modo });
   } catch (error: any) {
-    console.error('Error en /limpiar:', error);
+    logger.error('Error in /limpiar endpoint:', error);
     return res.status(500).json({ error: error.message || 'Error interno al limpiar correos' });
   }
 });
 
+// Batch action endpoint (e.g. Delete or Archive selected items)
+app.post('/accion-lote', (req, res) => {
+  try {
+    const accion = req.body.accion as 'Eliminar' | 'Archivar' | 'Conservar';
+    let ids: string[] = [];
+
+    if (typeof req.body.ids === 'string') {
+      try {
+        ids = JSON.parse(req.body.ids);
+      } catch {
+        ids = [req.body.ids];
+      }
+    } else if (Array.isArray(req.body.ids)) {
+      ids = req.body.ids;
+    }
+
+    if (!ids || ids.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron identificadores de correos para procesar.' });
+    }
+
+    logger.info(`Batch action "${accion}" applied to ${ids.length} emails:`, ids);
+
+    // Update in-memory processed items
+    if (accion === 'Eliminar') {
+      correosProcesados = correosProcesados.filter(c => !ids.includes(c.id));
+    } else {
+      correosProcesados.forEach(c => {
+        if (ids.includes(c.id)) {
+          c.clasificacion = accion;
+        }
+      });
+    }
+
+    return res.json({
+      success: true,
+      accion,
+      processedCount: ids.length,
+      remainingCount: correosProcesados.length
+    });
+  } catch (error: any) {
+    logger.error('Error in /accion-lote endpoint:', error);
+    return res.status(500).json({ error: error.message || 'Error interno al procesar acción por lote' });
+  }
+});
+
+// Global Error Handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  logger.error('Unhandled express exception:', err);
+  res.status(500).json({
+    error: 'Ocurrió un error inesperado en el servidor.',
+    details: NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
+  logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
+  logger.info(`Entorno: ${NODE_ENV} | Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada' : 'Heurística fallback activa'}`);
 });
