@@ -824,8 +824,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
-  logger.info(`Entorno: ${NODE_ENV} | Total correos en bandeja: ${INBOX_DATABASE.length}`);
-  logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-2.5-flash)' : 'Heurística fallback activa'}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, '0.0.0.0', () => {
+    logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
+    logger.info(`Entorno: ${NODE_ENV} | Total correos en bandeja: ${INBOX_DATABASE.length}`);
+    logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-2.5-flash)' : 'Heurística fallback activa'}`);
+  });
+}
+
+export default app;
+
