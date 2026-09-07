@@ -26,7 +26,24 @@ document.addEventListener('DOMContentLoaded', () => {
   initPwaSupport();
   initThemeToggle();
   initWarriorMode();
+  checkAuthUrlFeedback();
 });
+
+function checkAuthUrlFeedback() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'success') {
+      showSnackbar('¡Sesión iniciada con éxito con Google!', 'success', 4000);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('logout') === 'success') {
+      showSnackbar('Has cerrado sesión correctamente.', 'info', 4000);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('error') === 'auth_failed') {
+      showSnackbar('Error al autenticar con Google.', 'error', 5000);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  } catch (e) {}
+}
 
 /* ==========================================================================
    1. Material Ripple Effect
@@ -129,9 +146,7 @@ function initUserMenu() {
 }
 
 window.handleLogout = function() {
-  showSnackbar('Sesión cerrada correctamente (modo demostración)', 'info', 3000);
-  const userMenu = document.getElementById('userMenu');
-  if (userMenu) userMenu.classList.remove('open');
+  window.location.href = '/auth/logout';
 };
 
 /* ==========================================================================
@@ -172,6 +187,11 @@ function initSearchForm() {
       });
 
       const data = await response.json();
+      if (response.status === 401 && data.redirectTo) {
+        showSnackbar('Debes conectar tu cuenta de Google. Redirigiendo...', 'info', 3000);
+        window.location.href = data.redirectTo;
+        return;
+      }
 
       if (!response.ok || data.error) {
         throw new Error(data.error || 'Error al analizar correos');
@@ -1085,6 +1105,11 @@ function initWarriorMode() {
       });
 
       const prepData = await prepRes.json();
+      if (prepRes.status === 401 && prepData.redirectTo) {
+        showSnackbar('Debes conectar tu cuenta de Google para iniciar el escaneo. Redirigiendo...', 'info', 3000);
+        window.location.href = prepData.redirectTo;
+        return;
+      }
       if (!prepRes.ok || !prepData.success) {
         throw new Error(prepData.error || 'Error al preparar la limpieza total');
       }

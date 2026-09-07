@@ -2,6 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
@@ -11,6 +14,21 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const USER_NAME = process.env.USER_NAME || 'Pedro José Pirovani';
 const USER_EMAIL = process.env.USER_EMAIL || 'pirovanipedrojose@gmail.com';
+
+// Google OAuth 2.0 Credentials (for Vercel & local development)
+const GOOGLE_CLIENT_ID = process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+const GOOGLE_REDIRECT_URI = process.env.GMAIL_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI || 'https://gmail-ai-cleaner-nu.vercel.app/auth/google/callback';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'gmail-ai-cleaner-session-secret-2026';
+
+export interface AppUser {
+  id: string;
+  displayName: string;
+  email: string;
+  avatar?: string;
+  accessToken: string;
+  refreshToken?: string;
+}
 
 const upload = multer();
 
@@ -35,6 +53,88 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none()); // To support multipart/form-data sent via FormData
 app.use(express.static(path.join(process.cwd(), 'public')));
+
+// Express Session Configuration
+app.use(
+  session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  })
+);
+
+// Passport Authentication Configuration
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user: any, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user: any, done) => {
+  done(null, user);
+});
+
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+  logger.info('Inicializando GoogleStrategy con clientID configurado.');
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
+        callbackURL: GOOGLE_REDIRECT_URI,
+      },
+      (_accessToken, _refreshToken, profile, done) => {
+        const user: AppUser = {
+          id: profile.id,
+          displayName: profile.displayName || (profile.name ? `${profile.name.givenName || ''} ${profile.name.familyName || ''}`.trim() : 'Usuario'),
+          email: profile.emails && profile.emails[0] ? profile.emails[0].value : '',
+          avatar: profile.photos && profile.photos[0] ? profile.photos[0].value : '',
+          accessToken: _accessToken,
+          refreshToken: _refreshToken,
+        };
+        logger.info(`Google OAuth exitoso para: ${user.email} (${user.displayName})`);
+        return done(null, user);
+      }
+    )
+  );
+} else {
+  logger.warn('Google OAuth no configurado (GMAIL_CLIENT_ID y GMAIL_CLIENT_SECRET vacíos). Configura estas variables en Vercel para sincronizar Gmail real.');
+}
+
+// User Context Middleware: passes user info to all EJS templates
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const currentUser = (req.user as AppUser) || null;
+  res.locals.user = currentUser;
+  res.locals.isAuthenticated = Boolean(currentUser && currentUser.accessToken);
+  res.locals.userName = currentUser?.displayName || USER_NAME;
+  res.locals.userEmail = currentUser?.email || USER_EMAIL;
+  res.locals.userAvatar = currentUser?.avatar || '';
+  next();
+});
+
+// Middleware de verificación de autenticación
+function requireGmailAuth(req: Request, res: Response, next: NextFunction) {
+  const user = req.user as AppUser | undefined;
+  const isAuth = Boolean(user && user.accessToken);
+
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && !isAuth) {
+    if (req.xhr || req.headers.accept?.includes('application/json') || req.path.startsWith('/api/')) {
+      return res.status(401).json({
+        error: 'No autenticado',
+        message: 'Debes conectar tu cuenta de Google para acceder a tu bandeja de Gmail.',
+        redirectTo: '/auth/google'
+      });
+    }
+    return res.redirect('/auth/google');
+  }
+  next();
+}
 
 // PWA Service Worker & Manifest routes with required PWA headers
 app.get('/service-worker.js', (_req: Request, res: Response) => {
@@ -463,15 +563,220 @@ function getFilteredInboxItems(filterType: string, customQuery?: string): EmailI
   return list;
 }
 
+/* ==========================================================================
+   GOOGLE GMAIL API INTEGRATION (Server-to-Google OAuth 2.0)
+   ========================================================================== */
+
+// Consultar mensajes reales de Gmail usando el token de acceso
+async function fetchRealGmailMessages(accessToken: string, query: string, maxResults = 50): Promise<EmailItem[]> {
+  try {
+    const q = encodeURIComponent(query || 'in:inbox');
+    const listUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${q}&maxResults=${maxResults}`;
+    
+    const listRes = await fetch(listUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!listRes.ok) {
+      const errBody = await listRes.text();
+      logger.warn(`Gmail API list error (${listRes.status}): ${errBody.slice(0, 200)}`);
+      return [];
+    }
+
+    const listData = await listRes.json();
+    const messages: Array<{ id: string; threadId: string }> = listData.messages || [];
+    if (messages.length === 0) return [];
+
+    logger.info(`Obteniendo detalles de ${messages.length} correos reales desde Gmail API...`);
+
+    const items = await Promise.all(
+      messages.map(async (m) => {
+        try {
+          const detailRes = await fetch(
+            `https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            }
+          );
+          if (!detailRes.ok) return null;
+          const msg = await detailRes.json();
+          const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
+          
+          const from = headers.find(h => h.name?.toLowerCase() === 'from')?.value || 'Remitente desconocido';
+          const subject = headers.find(h => h.name?.toLowerCase() === 'subject')?.value || '(Sin asunto)';
+          const dateStr = headers.find(h => h.name?.toLowerCase() === 'date')?.value || '';
+          
+          let isOlder = false;
+          if (dateStr) {
+            const d = new Date(dateStr);
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            isOlder = d < oneYearAgo;
+          }
+
+          return {
+            id: msg.id,
+            remitente: from,
+            asunto: subject,
+            resumen: msg.snippet || 'Sin resumen disponible',
+            sizeBytes: msg.sizeEstimate || 12000,
+            date: dateStr ? new Date(dateStr).toISOString().split('T')[0] : '2025-01-01',
+            categoria: 'inbox' as const,
+            isOlderThan1Year: isOlder,
+            inTrash: false,
+            archived: false,
+          };
+        } catch (e) {
+          return null;
+        }
+      })
+    );
+
+    return items.filter(Boolean) as EmailItem[];
+  } catch (error: any) {
+    logger.error('Error al consultar Gmail API:', error.message || error);
+    return [];
+  }
+}
+
+// Mover correo a la papelera en Gmail
+async function trashRealGmailMessage(accessToken: string, id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}/trash`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.ok;
+  } catch (e) {
+    logger.error(`Error enviando correo ${id} a papelera en Gmail:`, e);
+    return false;
+  }
+}
+
+// Archivar correo en Gmail (remueve la etiqueta INBOX)
+async function archiveRealGmailMessage(accessToken: string, id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}/modify`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        removeLabelIds: ['INBOX'],
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    logger.error(`Error archivando correo ${id} en Gmail:`, e);
+    return false;
+  }
+}
+
+/* ==========================================================================
+   AUTHENTICATION ROUTES (Google OAuth 2.0)
+   ========================================================================== */
+
+// 1. Redirigir a Google para iniciar sesión y autorizar acceso a Gmail
+app.get('/auth/google', (req, res, next) => {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    logger.warn('Google OAuth no configurado. Faltan GMAIL_CLIENT_ID y GMAIL_CLIENT_SECRET.');
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Google OAuth Requerido • Gmail AI Cleaner</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+          body { font-family: Roboto, sans-serif; background: #f8f9fa; color: #202124; margin: 0; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 90vh; }
+          .card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 36px 32px; max-width: 520px; text-align: center; border: 1px solid #e0e0e0; }
+          .icon { font-size: 40px; margin-bottom: 12px; }
+          h1 { font-size: 20px; font-weight: 600; color: #ea4335; margin: 0 0 12px 0; }
+          p { font-size: 14.5px; line-height: 1.6; color: #5f6368; margin: 0 0 20px 0; text-align: left; }
+          .code-box { background: #f1f3f4; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 13px; color: #202124; text-align: left; margin-bottom: 24px; }
+          .btn { display: inline-block; background: #1a73e8; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-size: 14px; font-weight: 500; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">⚠️</div>
+          <h1>Variables OAuth Requeridas en Vercel</h1>
+          <p>Para conectar tu cuenta de Gmail real, debes ingresar a la configuración de tu proyecto en <strong>Vercel (Settings &gt; Environment Variables)</strong> y definir:</p>
+          <div class="code-box">
+            GMAIL_CLIENT_ID=&lt;tu_client_id_de_google_cloud&gt;<br>
+            GMAIL_CLIENT_SECRET=&lt;tu_client_secret_de_google_cloud&gt;<br>
+            GMAIL_REDIRECT_URI=https://gmail-ai-cleaner-nu.vercel.app/auth/google/callback
+          </div>
+          <p style="font-size: 13px; color: #70757a;">Asegúrate de agregar este redirect URI en la consola de Google Cloud (APIs &amp; Services &gt; Credentials).</p>
+          <a href="/" class="btn">Volver a la aplicación</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+
+  passport.authenticate('google', {
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/gmail.modify',
+    ],
+    accessType: 'offline',
+    prompt: 'consent',
+  })(req, res, next);
+});
+
+// 2. Callback de Google OAuth: recibe el código y guarda el token en sesión
+app.get(
+  '/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/?error=auth_failed',
+  }),
+  (req, res) => {
+    const user = req.user as AppUser;
+    logger.info(`Sesión autenticada para ${user?.email} (${user?.displayName})`);
+    res.redirect('/?auth=success');
+  }
+);
+
+// 3. Cerrar sesión y destruir datos de sesión
+app.get('/auth/logout', (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      logger.error('Error al cerrar sesión:', err);
+      return next(err);
+    }
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      logger.info('Sesión destruida y cookie limpiada con éxito.');
+      res.redirect('/?logout=success');
+    });
+  });
+});
+
 // Routes
 app.get('/', (req, res) => {
   logger.debug('Rendering index view');
-  res.render('index', { userName: USER_NAME, userEmail: USER_EMAIL });
+  res.render('index', { 
+    userName: res.locals.userName, 
+    userEmail: res.locals.userEmail, 
+    userAvatar: res.locals.userAvatar, 
+    isAuthenticated: res.locals.isAuthenticated, 
+    user: res.locals.user 
+  });
 });
 
 app.get('/resultados', (req, res) => {
   logger.debug('Rendering resultados view');
-  res.render('resultados', { userName: USER_NAME, userEmail: USER_EMAIL });
+  res.render('resultados', { 
+    userName: res.locals.userName, 
+    userEmail: res.locals.userEmail, 
+    userAvatar: res.locals.userAvatar, 
+    isAuthenticated: res.locals.isAuthenticated, 
+    user: res.locals.user 
+  });
 });
 
 // Health check endpoint
@@ -493,7 +798,7 @@ app.get('/health', (req, res) => {
    ========================================================================== */
 
 // 1. Preparar Limpieza Total: devuelve conteo total, número de lotes y tamaño estimado
-app.post('/api/limpieza-total/preparar', (req, res) => {
+app.post('/api/limpieza-total/preparar', requireGmailAuth, (req, res) => {
   try {
     const filterType = (req.body.filterType || 'all').trim();
     const customQuery = (req.body.customQuery || '').trim();
@@ -537,7 +842,7 @@ app.post('/api/limpieza-total/preparar', (req, res) => {
 });
 
 // 2. Procesar Lote Individual (50 correos por petición para respetar Gemini y Vercel)
-app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
+app.post('/api/limpieza-total/procesar-lote', requireGmailAuth, async (req, res) => {
   try {
     const batchIndex = parseInt(req.body.batchIndex, 10) || 0;
     const batchSize = parseInt(req.body.batchSize, 10) || 50;
@@ -656,7 +961,7 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
 });
 
 // 3. Ejecutar Limpieza Masiva (Mover a Papelera con soporte de Deshacer)
-app.post('/api/limpieza-total/ejecutar', (req, res) => {
+app.post('/api/limpieza-total/ejecutar', requireGmailAuth, async (req, res) => {
   try {
     const accion = (req.body.accion || 'eliminar_todos') as 'eliminar_todos' | 'archivar_todos';
     let targetIds: string[] = [];
@@ -683,6 +988,17 @@ app.post('/api/limpieza-total/ejecutar', (req, res) => {
     }
 
     logger.info(`[WARRIOR MODE] Executing action="${accion}" on ${targetIds.length} items`);
+
+    const currentUser = req.user as AppUser | undefined;
+    if (currentUser && currentUser.accessToken) {
+      logger.info(`[GMAIL API] Aplicando acción "${accion}" en Gmail real para ${currentUser.email}...`);
+      await Promise.allSettled(
+        targetIds.map(id => accion === 'eliminar_todos' 
+          ? trashRealGmailMessage(currentUser.accessToken, id) 
+          : archiveRealGmailMessage(currentUser.accessToken, id)
+        )
+      );
+    }
 
     let freedBytes = 0;
     const trashedIds: string[] = [];
@@ -778,7 +1094,7 @@ app.post('/api/limpieza-total/deshacer', (_req, res) => {
    ========================================================================== */
 
 // Endpoint to search and analyze emails
-app.post('/analizar', async (req, res) => {
+app.post('/analizar', requireGmailAuth, async (req, res) => {
   try {
     const query = (req.body.query || '').trim();
     const limite = parseInt(req.body.limite, 10) || 10;
@@ -790,8 +1106,22 @@ app.post('/analizar', async (req, res) => {
       return res.status(400).json({ error: 'Filtro de búsqueda vacío. Ingresa un término o filtro de Gmail.' });
     }
 
-    const matching = getFilteredInboxItems('all', query);
-    const toProcess = matching.slice(0, Math.min(limite, 100));
+    const currentUser = req.user as AppUser | undefined;
+    let toProcess: EmailItem[] = [];
+
+    if (currentUser && currentUser.accessToken) {
+      logger.info(`[GMAIL API] Consultando correos reales de Gmail para ${currentUser.email} con query="${query}"...`);
+      const liveItems = await fetchRealGmailMessages(currentUser.accessToken, query, Math.min(limite, 50));
+      if (liveItems && liveItems.length > 0) {
+        toProcess = liveItems;
+      } else {
+        const matching = getFilteredInboxItems('all', query);
+        toProcess = matching.slice(0, Math.min(limite, 100));
+      }
+    } else {
+      const matching = getFilteredInboxItems('all', query);
+      toProcess = matching.slice(0, Math.min(limite, 100));
+    }
 
     if (toProcess.length === 0) {
       logger.info('No emails found for query');
