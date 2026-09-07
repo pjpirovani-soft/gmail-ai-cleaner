@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail AI Cleaner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #ea4335, #4285f4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .badge-eliminar { background: #ea4335; color: white; }
+        .badge-archivar { background: #fbbc04; color: #1a1a1a; }
+        .badge-conservar { background: #34a853; color: white; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>
