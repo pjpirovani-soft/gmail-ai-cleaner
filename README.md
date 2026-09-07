@@ -11,16 +11,40 @@
 
 ## 📖 Descripción General
 
-**Gmail AI Cleaner** es una aplicación web diseñada para transformar una bandeja de entrada caótica en una experiencia limpia y organizada ("Inbox Zero"). Permite a los usuarios buscar correos mediante la sintaxis nativa de Gmail, procesarlos en lote y clasificarlos con precisión en tres acciones clave:
+**Gmail AI Cleaner** es una aplicación web diseñada para transformar una bandeja de entrada caótica en una experiencia limpia y organizada ("Inbox Zero"). Actúa como un asistente inteligente de organización de correos electrónicos con acceso integral a la bandeja de entrada, clasificando cada mensaje de forma rigurosa y unívoca en una de tres categorías esenciales:
 
-1. 🗑️ **Eliminar**: Publicidad antigua, spam, notificaciones obsoletas y correos basura.
-2. 📁 **Archivar**: Facturas, confirmaciones de compras, reservas de viajes y newsletters leídos con valor histórico.
-3. ✅ **Conservar**: Mensajes personales directos, acuerdos de trabajo, contratos y alertas críticas de seguridad.
+1. ✅ **"ÚTIL" (Conservar)**: Correos funcionales, importantes o necesarios para la vida diaria:
+   - Correos de trabajo (jefes, colegas, clientes, proyectos activos).
+   - Correos del banco (alertas de seguridad, movimientos, transferencias).
+   - Correos de familiares y amigos cercanos.
+   - Correos de servicios esenciales de uso habitual (agua, luz, internet, seguros).
+   - Facturas y documentos importantes pendientes.
+   - Alertas de seguridad y códigos de verificación de cuentas (2FA).
+2. 📁 **"ARCHIVABLE" (Archivar)**: Correos que no son urgentes pero que poseen valor histórico o de consulta futura:
+   - Confirmaciones de compras y pedidos.
+   - Facturas pagadas y recibos contables.
+   - Correos informativos de empresas de uso habitual.
+   - Notificaciones de servicios en uso (no urgentes).
+3. 🗑️ **"DESECHABLE" (Eliminar)**: Correos que no son útiles y saturan la cuota de almacenamiento:
+   - Spam y correos no solicitados.
+   - Promociones, ofertas comerciales y publicidad invasiva.
+   - Newsletters y boletines no abiertos en meses.
+   - Notificaciones de redes sociales (Instagram, Facebook, LinkedIn, Twitter/X, etc.).
+   - Correos de marketing y ventas.
+   - Correos de Vercel, GitHub o servicios en desuso o innecesarios.
+
+> 🛡️ **Regla de oro para Inbox Zero**: Si un correo no encaja con certeza en ninguna categoría, el sistema lo clasifica preventivamente como **"Desechable" (Eliminar)** para mantener la bandeja de entrada siempre impecable.
+> 
+> 🎯 **Respuesta Estricta**: Para cada correo analizado, el modelo responde unívocamente con: `"Conservar"`, `"Archivar"` o `"Eliminar"`.
 
 ---
 
 ## ✨ Características Principales (Versión 2.0)
 
+- **📝 Instrucciones Personalizadas para Gemini**:
+  - Campo de texto dedicado con límite de 500 caracteres y contador visual en tiempo real.
+  - Permite al usuario dictar directivas específicas con máxima prioridad (por ejemplo: *"No elimines correos de mi jefe ni del banco. Archiva todas las facturas"*).
+  - Botones de sugerencias rápidas (chips) y persistencia automática local.
 - **🎨 Diseño Google Material Design 3 (M3)**:
   - Paleta cromática oficial de Google: Azul (#1A73E8), Verde (#34A853), Rojo (#EA4335) y Amarillo (#FBBC04).
   - Tipografía oficial **Roboto** e iconos vectoriales mediante **Google Material Symbols**.
@@ -31,7 +55,8 @@
   - Filtros directos con un solo clic: `older_than:1y` (antiguos), `from:newsletter` (boletines), `larger:10M` (pesados) y `from:ofertas`.
   - Soporte de sintaxis nativa de Gmail combinable.
 - **🤖 Clasificación con Gemini AI**:
-  - Evaluación semántica del asunto, remitente y contenido mediante el modelo **Gemini 2.5 Flash**.
+  - Evaluación semántica del asunto, remitente y contenido mediante el modelo **Gemini 3.8 Flash**.
+  - Clasificación en las 3 categorías estrictas: **"ÚTIL" (Conservar)**, **"ARCHIVABLE" (Archivar)** y **"DESECHABLE" (Eliminar)**.
   - Motor heurístico inteligente de respaldo en caso de no contar con clave de API.
 - **📊 Panel de Métricas y Resumen**:
   - Tres tarjetas elevadas con contadores en tiempo real para las categorías de acción.

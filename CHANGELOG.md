@@ -6,6 +6,25 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ---
 
+## [2.1.0] - 2026-09-07
+
+### 🚀 Motor de Clasificación Semántica Estricta y Personalización
+- **Taxonomía Estricta de 3 Categorías**:
+  - Implementación del sistema de decisión con tres categorías exhaustivas:
+    1. **"ÚTIL" (Conservar)**: Trabajo, entidades bancarias, alertas de seguridad, familiares, servicios esenciales, facturas y documentos pendientes.
+    2. **"ARCHIVABLE" (Archivar)**: Confirmaciones de compras/pedidos, facturas pagadas, informativos de empresas de uso habitual y notificaciones de servicios no urgentes.
+    3. **"DESECHABLE" (Eliminar)**: Spam, ofertas y promociones, newsletters viejas, notificaciones de redes sociales, marketing y servicios en desuso (Vercel, GitHub, etc.).
+  - **Regla de Descarte por Defecto**: Todo correo que no clasifique con certeza en Útil o Archivable se categoriza como `"Desechable"` (`Eliminar`) para garantizar el Inbox Zero.
+  - **Restricción Unívoca de Salida**: Respuestas unívocas exclusivamente compuestas por `"Conservar"`, `"Archivar"` o `"Eliminar"`.
+- **Campo de Instrucciones Personalizadas para Gemini**:
+  - Interfaz dedicada debajo del botón de Limpieza Total con límite de 500 caracteres, contador visual en vivo y botones de atajo (*"No borrar jefe ni banco"*, *"Archivar facturas"*, etc.).
+  - Persistencia automática de directivas en `localStorage`.
+  - Inyección prioritaria de las instrucciones del usuario en el prompt de Gemini antes de las reglas generales.
+- **Actualización Documental Exhaustiva**:
+  - Actualización de `README.md`, `GUIA_DE_USUARIO.md` y `CHANGELOG.md` documentando las 3 categorías, sus criterios específicos y las instrucciones personalizadas.
+
+---
+
 ## [2.0.0] - 2026-09-07
 
 ### 🚀 Resumen del Lanzamiento

@@ -257,18 +257,18 @@ interface UndoRecord {
 
 let lastUndoRecord: UndoRecord | null = null;
 
-// Heuristic rule-based classifier with support for custom instructions
+// Heuristic rule-based classifier aligned with strict 3-tier categorization
 function fallbackClassification(
   correo: { asunto: string; remitente: string; resumen: string },
   instruccionesPersonalizadas?: string
 ): 'Eliminar' | 'Archivar' | 'Conservar' {
   const text = `${correo.remitente} ${correo.asunto} ${correo.resumen}`.toLowerCase();
   
-  // Apply quick safety heuristics if custom instructions are provided
+  // 1. Prioritize user custom instructions if present
   if (instruccionesPersonalizadas && instruccionesPersonalizadas.trim()) {
     const inst = instruccionesPersonalizadas.toLowerCase();
     
-    // Safety rules: if user asks to protect boss, bank, work, family
+    // Protection heuristics (boss, bank, work, family, essential services)
     if ((inst.includes('no elimines') || inst.includes('no borrar') || inst.includes('conserva') || inst.includes('no tocar')) &&
         ((inst.includes('banco') && (text.includes('banco') || text.includes('santander') || text.includes('bbva') || text.includes('galicia'))) ||
          (inst.includes('jefe') && (text.includes('jefe') || text.includes('gerente') || text.includes('director') || text.includes('boss'))) ||
@@ -277,7 +277,7 @@ function fallbackClassification(
       return 'Conservar';
     }
 
-    // Archive rules: if user asks to archive invoices or receipts
+    // Archive heuristics
     if (inst.includes('archiva') || inst.includes('archivar')) {
       if (inst.includes('factura') && (text.includes('factura') || text.includes('recibo') || text.includes('comprobante') || text.includes('ticket'))) {
         return 'Archivar';
@@ -285,39 +285,83 @@ function fallbackClassification(
     }
   }
 
-  if (text.includes('descuento') || text.includes('oferta') || text.includes('promo') || 
-      text.includes('notifications@') || text.includes('notificacion') || text.includes('70% off') ||
-      text.includes('publicidad') || text.includes('spam') || text.includes('shein') ||
-      text.includes('aliexpress') || text.includes('mercadolibre') || text.includes('liquidación') ||
-      text.includes('flash') || text.includes('rebajas') || text.includes('cupones')) {
-    return 'Eliminar';
+  // 2. CATEGORÍA "ÚTIL" (Conservar):
+  // - Correos de trabajo (jefes, colegas, clientes, proyectos activos)
+  // - Correos del banco (alertas de seguridad, movimientos, transferencias)
+  // - Correos de familiares y amigos cercanos
+  // - Correos de servicios esenciales (agua, luz, internet, seguros)
+  // - Facturas y documentos importantes pendientes
+  // - Alertas de seguridad y verificación de cuentas
+  const isUtil = 
+    text.includes('jefe') || text.includes('balance de equipo') || text.includes('minuta oficial') ||
+    text.includes('banco') || text.includes('token dinámica') || text.includes('transferencia') ||
+    text.includes('código de verificación') || text.includes('alerta de seguridad') ||
+    text.includes('recursos humanos') || text.includes('liquidación salarial') || text.includes('recibo de nómina') ||
+    text.includes('afip') || text.includes('inscripción fiscal') || text.includes('pase de abordar') ||
+    text.includes('vuelos-checkin') || text.includes('familia@') || text.includes('reunión familiar') ||
+    text.includes('agua') || text.includes('luz') || text.includes('edenor') || text.includes('edesur') ||
+    text.includes('aysa') || text.includes('metrogas') || text.includes('seguro');
+
+  if (isUtil) {
+    return 'Conservar';
   }
-  
-  if (text.includes('newsletter') || text.includes('boletín') || text.includes('boletin') ||
-      text.includes('factura') || text.includes('recibo') || text.includes('reserva') ||
-      text.includes('confirmación') || text.includes('confirmacion') || text.includes('digest') ||
-      text.includes('devto') || text.includes('conferencia') || text.includes('backup') ||
-      text.includes('keynote') || text.includes('cad') || text.includes('album') || text.includes('álbum')) {
+
+  // 3. CATEGORÍA "ARCHIVABLE" (Archivar):
+  // - Confirmaciones de compras y pedidos
+  // - Facturas pagadas y recibos
+  // - Correos informativos de empresas de uso habitual
+  // - Notificaciones de servicios que se usan (no urgentes)
+  // - Reservas de hotel o viajes pasados
+  const isArchivable = 
+    text.includes('confirmación de reserva') || text.includes('reserva de alojamiento') ||
+    text.includes('factura pagada') || text.includes('recibo histórico') || text.includes('entradas para') ||
+    text.includes('grabación disponible') || text.includes('webinar de arquitectura') ||
+    text.includes('backup de video') || text.includes('planos cad') || text.includes('presentación ejecutiva') ||
+    text.includes('cortes iniciales') || text.includes('pedido confirmado') || text.includes('comprobante de compra');
+
+  if (isArchivable) {
     return 'Archivar';
   }
-  
-  return 'Conservar';
+
+  // 4. CATEGORÍA "DESECHABLE" (Eliminar):
+  // - Spam y correos no solicitados
+  // - Promociones, ofertas comerciales y publicidad (cupones, descuentos, rebajas)
+  // - Newsletters que no se han abierto en meses
+  // - Redes sociales (LinkedIn, Twitter/X, Instagram, Reddit, Quora, etc.)
+  // - Marketing y ventas
+  // - Vercel, GitHub o servicios que ya no se usan o no se necesitan
+  // Si un correo no entra en ninguna de estas categorías, clasifícalo como "Desechable" (Eliminar) para mantener la bandeja limpia.
+  return 'Eliminar';
 }
 
-// Intelligent classifier using Gemini 2.5 Flash with custom user instructions
+let geminiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
+  }
+  return geminiClient;
+}
+
+// Intelligent classifier using Gemini 3.8 Flash with strict 3-tier categorization
 async function clasificarConGemini(
   correo: { asunto: string; remitente: string; resumen: string },
   instruccionesPersonalizadas?: string
 ): Promise<'Eliminar' | 'Archivar' | 'Conservar'> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const ai = getGeminiClient();
+  if (!ai) {
     return fallbackClassification(correo, instruccionesPersonalizadas);
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-
-    // Custom instructions prioritized at the very beginning of the prompt
     let userInstructionsBlock = '';
     if (instruccionesPersonalizadas && instruccionesPersonalizadas.trim()) {
       userInstructionsBlock = `Instrucciones personalizadas del usuario: ${instruccionesPersonalizadas.trim()}
@@ -326,28 +370,52 @@ IMPORTANTE: Debes dar MÁXIMA PRIORIDAD a estas instrucciones personalizadas del
 `;
     }
 
-    const prompt = `${userInstructionsBlock}Actúa como un organizador inteligente de correos de Gmail con precisión estricta.
-Clasifica este correo exactamente en una de estas 3 opciones:
-- "Eliminar": Si es publicidad vieja, promociones caducadas, spam, notificaciones automáticas o newsletters que ya no aportan valor (salvo que las instrucciones personalizadas del usuario indiquen lo contrario).
-- "Archivar": Si es un boletín/newsletter leído, factura o recibo antiguo, confirmación de compra o reserva útil como historial contable/personal pero no urgente.
-- "Conservar": Si es un correo personal, laboral importante, alerta de seguridad o información vigente imprescindible.
+    const prompt = `${userInstructionsBlock}Eres un asistente de organización de correos electrónicos con acceso a TODA mi bandeja de entrada. Tu tarea es leer este correo y clasificarlo estrictamente en tres categorías:
+
+1. "ÚTIL" (Conservar): Correos que son funcionales, importantes o necesarios para mi vida diaria. Incluye:
+   - Correos de trabajo (jefes, colegas, clientes, proyectos activos).
+   - Correos del banco (alertas de seguridad, movimientos, transferencias).
+   - Correos de familiares y amigos cercanos.
+   - Correos de servicios esenciales que uso (agua, luz, internet, seguros).
+   - Facturas y documentos importantes.
+   - Alertas de seguridad y verificación de cuentas.
+
+2. "ARCHIVABLE" (Archivar): Correos que no son urgentes pero que podrían ser útiles en el futuro. Incluye:
+   - Confirmaciones de compras y pedidos.
+   - Facturas pagadas.
+   - Correos informativos de empresas que uso.
+   - Notificaciones de servicios que uso (pero no son urgentes).
+
+3. "DESECHABLE" (Eliminar): Correos que NO son útiles y solo ocupan espacio. Incluye:
+   - Spam y correos no solicitados.
+   - Promociones, ofertas comerciales y publicidad.
+   - Newsletters que no he abierto en meses.
+   - Correos de redes sociales (notificaciones de Instagram, Facebook, LinkedIn, etc.).
+   - Correos de marketing y ventas.
+   - Correos de Vercel, GitHub o servicios que ya no uso o que no necesito.
+
+Si un correo no entra en ninguna de estas categorías, clasifícalo como "Desechable" para mantener mi bandeja limpia.
 
 Detalles del correo:
 Remitente: ${correo.remitente}
 Asunto: ${correo.asunto}
 Contenido/Resumen: ${correo.resumen}
 
-Responde ÚNICAMENTE con una sola palabra: Eliminar, Archivar o Conservar.`;
+Responde ÚNICAMENTE con una de estas tres palabras: "Conservar", "Archivar" o "Eliminar".`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const callPromise = ai.models.generateContent({
+      model: 'gemini-3.8-flash',
       contents: prompt,
     });
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout al consultar Gemini')), 3000)
+    );
+    const response = await Promise.race([callPromise, timeoutPromise]);
 
     const output = response.text?.trim() || '';
-    if (/eliminar/i.test(output)) return 'Eliminar';
-    if (/archivar/i.test(output)) return 'Archivar';
-    if (/conservar/i.test(output)) return 'Conservar';
+    if (/conservar|útil|util/i.test(output)) return 'Conservar';
+    if (/archivar|archivable/i.test(output)) return 'Archivar';
+    if (/eliminar|desechable/i.test(output)) return 'Eliminar';
     return fallbackClassification(correo, instruccionesPersonalizadas);
   } catch (error: any) {
     logger.warn('Gemini API call failed, falling back to heuristic:', error.message);
@@ -552,7 +620,7 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
           clasificacion,
           motivo: instruccionesPersonalizadas 
             ? 'Clasificado con Gemini (con instrucciones personalizadas)' 
-            : 'Clasificado con Gemini 2.5 Flash'
+            : 'Clasificado con Gemini 3.8 Flash'
         };
       })
     );
@@ -744,7 +812,7 @@ app.post('/analizar', async (req, res) => {
           clasificacion,
           motivo: instruccionesPersonalizadas 
             ? 'Clasificado con Gemini (con instrucciones personalizadas)' 
-            : 'Clasificado con Gemini 2.5 Flash'
+            : 'Clasificado con Gemini 3.8 Flash'
         };
       })
     );
@@ -876,7 +944,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, '0.0.0.0', () => {
     logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
     logger.info(`Entorno: ${NODE_ENV} | Total correos en bandeja: ${INBOX_DATABASE.length}`);
-    logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-2.5-flash)' : 'Heurística fallback activa'}`);
+    logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-3.8-flash)' : 'Heurística fallback activa'}`);
   });
 }
 

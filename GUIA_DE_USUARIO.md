@@ -62,22 +62,31 @@ Para ahorrar tiempo, la aplicación incluye cuatro botones de chip accesibles co
 
 ## 4. Análisis con Inteligencia Artificial (Gemini)
 
-Cuando presionas el botón **Analizar**:
+Cuando configuras tus parámetros y presionas **Analizar** o inicias el **Modo Guerrero**:
 
-1. Se activa la **Barra de Progreso Lineal de Material**, mostrando el avance en tiempo real (`Analizando correo X de Y con Gemini...`).
-2. El servidor envía los metadatos relevantes (asunto, remitente y resumen del cuerpo) al modelo de IA **Gemini 2.5 Flash**.
-3. El modelo analiza el tono, la temporalidad y el valor del mensaje.
-4. En milisegundos se despliega el **Panel de Métricas** con 3 tarjetas visuales (Rojo, Amarillo y Verde) y la tabla con los resultados clasificados.
+1. **Instrucciones Personalizadas (Opcional)**: Si ingresaste directivas en el campo de texto (*"No elimines correos de mi jefe ni del banco. Archiva todas las facturas"*), Gemini les otorgará máxima prioridad sobre cualquier regla predeterminada.
+2. **Barra de Progreso Lineal de Material**: Muestra el avance en tiempo real (`Analizando correo X de Y con Gemini...` o barra por lotes en Modo Guerrero).
+3. **Evaluación Semántica**: El servidor envía los metadatos relevantes (asunto, remitente y resumen del cuerpo) al modelo de IA **Gemini 3.8 Flash**.
+4. **Respuesta Unívoca**: Para garantizar máxima fiabilidad y evitar ambigüedades, Gemini responde estrictamente con una sola palabra por correo: `"Conservar"`, `"Archivar"` o `"Eliminar"`.
+5. **Panel de Métricas**: En milisegundos se actualizan las tarjetas de resumen y la tabla interactiva de correos.
 
 ---
 
-## 5. Criterios de Clasificación
+## 5. Criterios de Clasificación Estricta
 
-| Recomendación | Color Material | Criterio de Decisión de la IA |
-| :--- | :--- | :--- |
-| **🗑️ Eliminar** | Rojo (`#EA4335`) | Correos promocionales vencidos, publicidad invasiva, notificaciones automáticas caducadas o spam. |
-| **📁 Archivar** | Amarillo / Ámbar (`#FBBC04`) | Facturas contables, recibos de servicios, confirmaciones de compras/reservas y boletines ya leídos con valor como registro histórico pero que no deben ensuciar la bandeja activa. |
-| **✅ Conservar** | Verde (`#34A853`) | Comunicaciones laborales vigentes, correos personales, alertas de seguridad de cuentas y documentos legales pendientes de respuesta. |
+El asistente de organización de correos evalúa cada mensaje de la bandeja de entrada según tres categorías exhaustivas:
+
+| Categoría | Acción Resultante | Color M3 | Inclusiones y Reglas de Decisión |
+| :--- | :--- | :--- | :--- |
+| **"ÚTIL"** | **✅ Conservar** | Verde (`#34A853`) | **Correos funcionales, importantes o necesarios para la vida diaria:**<br>• Correos de trabajo (jefes, colegas, clientes, proyectos activos).<br>• Correos del banco (alertas de seguridad, movimientos, transferencias).<br>• Correos de familiares y amigos cercanos.<br>• Correos de servicios esenciales (agua, luz, gas, internet, seguros).<br>• Facturas y documentos importantes pendientes.<br>• Alertas de seguridad y verificación de cuentas (códigos 2FA). |
+| **"ARCHIVABLE"** | **📁 Archivar** | Amarillo (`#FBBC04`) | **Correos no urgentes pero con utilidad o valor probatorio a futuro:**<br>• Confirmaciones de compras y pedidos.<br>• Facturas pagadas y recibos contables.<br>• Correos informativos de empresas de uso habitual.<br>• Notificaciones de servicios en uso (no urgentes).<br>• Reservas pasadas de hotel o pasajes de viaje. |
+| **"DESECHABLE"** | **🗑️ Eliminar** | Rojo (`#EA4335`) | **Correos que NO son útiles y solo ocupan espacio:**<br>• Spam y correos no solicitados.<br>• Promociones, ofertas comerciales, rebajas y publicidad.<br>• Newsletters y boletines que no has abierto en meses.<br>• Redes sociales (notificaciones de Instagram, Facebook, LinkedIn, Twitter/X, Reddit).<br>• Correos masivos de marketing y ventas.<br>• Correos de Vercel, GitHub o servicios que ya no usas o no necesitas. |
+
+> 🛡️ **Regla de Descarte por Defecto (Seguridad Inbox Zero)**:  
+> Si un correo electrónico **no entra claramente en ninguna de estas categorías**, el asistente lo clasifica como **"Desechable" (`Eliminar`)** para mantener la bandeja de entrada completamente limpia, libre de acumulación residual y en óptimo estado.
+
+> 📝 **Personalización de Reglas**:  
+> Puedes afinar o sobreescribir estos criterios usando el campo **Instrucciones personalizadas para Gemini** en la interfaz principal, o guardarlas localmente con los botones de chip sugeridos.
 
 ---
 
