@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail AI Cleaner</title>
+    <meta name="description" content="Analizador y limpiador inteligente de correos de Gmail con IA">
+    <meta property="og:title" content="Gmail AI Cleaner">
+    <meta property="og:description" content="Analizador y limpiador inteligente de correos de Gmail con IA">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #ea4335, #4285f4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .badge-eliminar { background: #ea4335; color: white; }
+        .badge-archivar { background: #fbbc04; color: #1a1a1a; }
+        .badge-conservar { background: #34a853; color: white; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="glass p-8" id="main-container">
+                <div class="flex items-center gap-3 mb-8" id="header-section">
+                    <span class="text-3xl">📬</span>
+                    <h1 class="text-3xl font-bold gradient-text">Gmail AI Cleaner</h1>
+                    <span class="ml-auto text-sm text-gray-400">v1.0</span>
+                </div>
+
+                <div class="glass p-6 mb-6" id="search-card">
+                    <h2 class="text-xl font-semibold mb-4">🔍 Buscar y analizar correos</h2>
+                    <form id="searchForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Filtro de búsqueda</label>
+                            <input type="text" 
+                                   id="queryInput" 
+                                   name="query" 
+                                   placeholder="Ej: older_than:1y, from:newsletter, larger:10M"
+                                   class="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                            <p class="text-xs text-gray-500 mt-1">
+                                💡 Ejemplos: <span class="text-blue-400 cursor-pointer" onclick="setFilter('older_than:1y')">older_than:1y</span> · 
+                                <span class="text-blue-400 cursor-pointer" onclick="setFilter('from:newsletter')">from:newsletter</span> · 
+                                <span class="text-blue-400 cursor-pointer" onclick="setFilter('larger:10M')">larger:10M</span>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Límite de correos</label>
+                            <input type="number" 
+                                   id="limiteInput" 
+                                   name="limite" 
+                                   value="10" 
+                                   min="1" 
+                                   max="100"
+                                   class="w-24 bg-black/30 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <button type="submit" 
+                                id="analizarBtn"
+                                class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition-colors cursor-pointer">
+                            🔍 Analizar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resultados -->
+                <div id="resultadosContainer" class="hidden">
+                    <div class="glass p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold">📊 Resultados</h2>
+                            <span id="totalCorreos" class="text-sm text-gray-400"></span>
+                        </div>
+                        
+                        <!-- Tabla -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="text-left py-2 px-3">Asunto</th>
+                                        <th class="text-left py-2 px-3">Remitente</th>
+                                        <th class="text-left py-2 px-3">Recomendación</th>
+                                        <th class="text-left py-2 px-3">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaCorreos">
+                                    <!-- Los correos se inyectan aquí con JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Modos de ejecución -->
+                        <div class="flex flex-wrap gap-3 mt-6">
+                            <button id="btnSimular" onclick="ejecutarLimpieza('simulacion')" 
+                                    class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
+                                🔍 Simular
+                            </button>
+                            <button id="btnAutomatico" onclick="ejecutarLimpieza('automatico')" 
+                                    class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
+                                🚀 Ejecutar automático
+                            </button>
+                            <button id="btnInteractivo" onclick="ejecutarLimpieza('interactivo')" 
+                                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer">
+                                🔄 Modo interactivo
+                            </button>
+                        </div>
+
+                        <div id="resultadosLimpieza" class="mt-6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Establecer filtro de ejemplo
+    function setFilter(value) {
+        document.getElementById('queryInput').value = value;
+    }
+
+    // Manejar el formulario de búsqueda
+    document.getElementById('searchForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const query = document.getElementById('queryInput').value;
+        const limite = document.getElementById('limiteInput').value;
+        const btn = document.getElementById('analizarBtn');
+        
+        btn.disabled = true;
+        btn.textContent = '⏳ Analizando...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('query', query);
+            formData.append('limite', limite);
+            
+            const response = await fetch('/analizar', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            if (data.correos && data.correos.length > 0) {
+                mostrarCorreos(data.correos);
+                document.getElementById('resultadosContainer').classList.remove('hidden');
+                document.getElementById('totalCorreos').textContent = `Total: ${data.total} correos`;
+            } else {
+                alert(data.mensaje || 'No se encontraron correos.');
+            }
+            
+        } catch (error) {
+            alert('Error al conectar con el servidor: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '🔍 Analizar';
+        }
+    });
+
+    function mostrarCorreos(correos) {
+        const tbody = document.getElementById('tablaCorreos');
+        tbody.innerHTML = '';
+        
+        correos.forEach(correo => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-gray-700/50 hover:bg-white/5';
+            
+            const badgeClass = {
+                'Eliminar': 'badge-eliminar',
+                'Archivar': 'badge-archivar',
+                'Conservar': 'badge-conservar'
+            }[correo.clasificacion] || 'bg-gray-500';
+            
+            tr.innerHTML = `
+                <td class="py-2 px-3">${correo.asunto || 'Sin asunto'}</td>
+                <td class="py-2 px-3 text-gray-400">${correo.remitente || 'Desconocido'}</td>
+                <td class="py-2 px-3">
+                    <span class="badge ${badgeClass} text-xs px-2 py-1 rounded-full">${correo.clasificacion}</span>
+                </td>
+                <td class="py-2 px-3">
+                    <span class="text-xs text-gray-500">${correo.id ? correo.id.slice(0, 8) : ''}...</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function ejecutarLimpieza(modo) {
+        const resultadosDiv = document.getElementById('resultadosLimpieza');
+        resultadosDiv.innerHTML = '<p class="text-gray-400">⏳ Procesando...</p>';
+        
+        try {
+            const formData = new FormData();
+            formData.append('modo', modo);
+            
+            const response = await fetch('/limpiar', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                resultadosDiv.innerHTML = `<p class="text-red-400">❌ ${data.error}</p>`;
+                return;
+            }
+            
+            // Mostrar resultados
+            let html = '<div class="mt-4 p-4 bg-black/30 rounded-lg"><h4 class="font-semibold mb-2">📋 Resumen</h4>';
+            data.resultados.forEach(r => {
+                const icon = r.accion.includes('Eliminar') ? '🗑️' : 
+                            r.accion.includes('Archivar') ? '📁' : '✅';
+                html += `<p class="text-sm my-1">${icon} ${(r.asunto || '').slice(0, 50)} → ${r.accion} <span class="text-gray-500">(${r.estado})</span></p>`;
+            });
+            html += '</div>';
+            resultadosDiv.innerHTML = html;
+            
+        } catch (error) {
+            resultadosDiv.innerHTML = `<p class="text-red-400">❌ Error: ${error.message}</p>`;
+        }
+    }
+    </script>
+</body>
+</html>

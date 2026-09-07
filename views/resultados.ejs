@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gmail AI Cleaner</title>
+    <title>Resultados - Gmail AI Cleaner</title>
+    <meta name="description" content="Resultados de la limpieza de Gmail con IA">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -22,15 +23,18 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .badge-eliminar { background: #ea4335; color: white; }
-        .badge-archivar { background: #fbbc04; color: #1a1a1a; }
-        .badge-conservar { background: #34a853; color: white; }
     </style>
 </head>
 <body>
     <div class="min-h-screen p-6">
         <div class="max-w-6xl mx-auto">
-            {% block content %}{% endblock %}
+            <div class="glass p-8" id="resultados-card">
+                <h1 class="text-2xl font-bold gradient-text mb-4">📊 Resultados de la limpieza</h1>
+                <div id="resultados" class="space-y-2">
+                    <p class="text-gray-400">No hay operaciones pendientes.</p>
+                </div>
+                <a href="/" class="text-blue-400 hover:text-blue-300 mt-4 inline-block">← Volver al inicio</a>
+            </div>
         </div>
     </div>
 </body>
