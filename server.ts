@@ -859,6 +859,32 @@ app.get('/', (req, res) => {
   });
 });
 
+// Política de Privacidad (cumplimiento Google OAuth & Google Cloud Console)
+app.get('/privacy', (req, res) => {
+  logger.debug('Rendering privacy view');
+  res.render('privacy', { 
+    userName: res.locals.userName, 
+    userEmail: res.locals.userEmail, 
+    userAvatar: res.locals.userAvatar, 
+    isAuthenticated: res.locals.isAuthenticated, 
+    user: res.locals.user,
+    lastUpdated: '7 de septiembre de 2026'
+  });
+});
+
+// Términos de Servicio (cumplimiento Google OAuth & Google Cloud Console)
+app.get('/terms', (req, res) => {
+  logger.debug('Rendering terms view');
+  res.render('terms', { 
+    userName: res.locals.userName, 
+    userEmail: res.locals.userEmail, 
+    userAvatar: res.locals.userAvatar, 
+    isAuthenticated: res.locals.isAuthenticated, 
+    user: res.locals.user,
+    lastUpdated: '7 de septiembre de 2026'
+  });
+});
+
 app.get('/resultados', (req, res) => {
   logger.debug('Rendering resultados view');
   res.render('resultados', { 

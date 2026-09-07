@@ -1,0 +1,233 @@
+<%- include('partials/header', { pageTitle: 'Política de Privacidad' }) %>
+
+<main style="max-width: 960px; margin: 0 auto; padding: 32px 20px 60px 20px;">
+
+  <!-- Breadcrumb & Volver -->
+  <div style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <nav style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--md-on-surface-variant);">
+      <a href="/" style="color: var(--md-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">home</span>
+        <span>Inicio</span>
+      </a>
+      <span>/</span>
+      <span style="color: var(--md-on-surface); font-weight: 500;">Política de Privacidad</span>
+    </nav>
+
+    <a href="/" class="md-btn ripple-surface" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: var(--md-shape-full); font-size: 13px; font-weight: 500; background: var(--md-surface); border: 1px solid var(--md-outline); color: var(--md-primary);">
+      <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+      <span>Volver a la aplicación</span>
+    </a>
+  </div>
+
+  <!-- Tarjeta Principal de Política de Privacidad -->
+  <article class="md-card md-card-elevated-1" style="padding: 36px 32px; background-color: var(--md-surface); border-radius: var(--md-shape-xl); border: 1px solid var(--md-outline);">
+
+    <!-- Encabezado -->
+    <header style="border-bottom: 1px solid var(--md-outline); padding-bottom: 24px; margin-bottom: 28px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--md-primary-container); color: var(--md-on-primary-container); padding: 6px 14px; border-radius: var(--md-shape-full); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">verified_user</span>
+        <span>Cumplimiento con Google OAuth &amp; Google API Services</span>
+      </div>
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--md-on-surface); margin: 0 0 10px 0; line-height: 1.25;">
+        Política de Privacidad de Gmail AI Cleaner
+      </h1>
+      <div style="font-size: 13.5px; color: var(--md-on-surface-variant); display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+        <span><strong>Última actualización:</strong> <%= typeof lastUpdated !== 'undefined' ? lastUpdated : '7 de septiembre de 2026' %></span>
+        <span>•</span>
+        <span><strong>Aplicación:</strong> Gmail AI Cleaner</span>
+        <span>•</span>
+        <span><strong>URL de producción:</strong> <a href="https://gmail-ai-cleaner.vercel.app" target="_blank" rel="noopener" style="color: var(--md-primary);">https://gmail-ai-cleaner.vercel.app</a></span>
+      </div>
+    </header>
+
+    <!-- Cláusula Destacada de Requisitos de Uso Limitado de Google (Google Limited Use) -->
+    <section style="background: #e8f0fe; border-left: 4px solid var(--md-primary); border-radius: 8px; padding: 20px 24px; margin-bottom: 32px; color: #174ea6;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <span class="material-symbols-outlined" style="font-size: 24px; color: var(--md-primary); margin-top: 2px;">gavel</span>
+        <div>
+          <h2 style="font-size: 15px; font-weight: 700; margin: 0 0 6px 0; color: #174ea6;">
+            Divulgación sobre la Política de Datos de Usuario de los Servicios de API de Google (Limited Use)
+          </h2>
+          <p style="font-size: 14px; line-height: 1.6; margin: 0; color: #202124;">
+            El uso y la transferencia que <strong>Gmail AI Cleaner</strong> haga a cualquier otra aplicación de la información recibida a través de las API de Google se ajustarán a la 
+            <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener" style="color: #1a73e8; font-weight: 600; text-decoration: underline;">
+              Política de Datos de Usuario de los Servicios de las API de Google
+            </a>, incluidos los requisitos de <strong>Uso Limitado (Limited Use requirements)</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contenido Detallado -->
+    <div style="display: flex; flex-direction: column; gap: 28px; line-height: 1.65; font-size: 15px; color: var(--md-on-surface);">
+
+      <!-- 1. Introducción y Responsable -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">info</span>
+          <span>1. Información General y Responsable del Tratamiento</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Esta Política de Privacidad describe cómo <strong>Gmail AI Cleaner</strong> (en adelante, "la Aplicación", "nosotros" o "nuestro servicio"), desarrollada por <strong>Pedro José Pirovani</strong>, recopila, procesa, transfiere y protege los datos personales de los usuarios que se conectan a través de los servicios de autenticación OAuth 2.0 de Google.
+        </p>
+        <p style="margin: 0; color: var(--md-on-surface-variant);">
+          Nos comprometemos a garantizar la máxima transparencia y respeto absoluto por la confidencialidad de tu información personal y tus correos electrónicos.
+        </p>
+      </section>
+
+      <!-- 2. Datos que recopilamos -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">folder_shared</span>
+          <span>2. Datos a los que accede la Aplicación</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Para prestar el servicio de análisis y limpieza de la bandeja de entrada, la aplicación solicita tu autorización explícita a través de la pantalla de consentimiento de Google OAuth 2.0 para acceder a:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            <strong>Información básica del perfil (<code>userinfo.profile</code> y <code>userinfo.email</code>):</strong> Nombre para mostrar, dirección de correo electrónico y avatar del usuario para autenticar la sesión e identificar la bandeja de entrada conectada.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Acceso a mensajes de Gmail (<code>https://www.googleapis.com/auth/gmail.modify</code>):</strong> Metadatos de correos (asunto, remitente, fecha, tamaño estimado, etiquetas) y extractos (snippets) de mensajes estrictamente necesarios para que los algoritmos de clasificación de IA determinen si un correo es publicidad, spam caducado o boletín prescindible.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Tokens de Acceso OAuth:</strong> Token temporal de acceso (Access Token) emitido por Google para autenticar las llamadas autorizadas a la API de Gmail en tu nombre.
+          </li>
+        </ul>
+      </section>
+
+      <!-- 3. Finalidad del tratamiento -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">task_alt</span>
+          <span>3. Finalidad del Uso de los Datos</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Los datos obtenidos a través de la API de Gmail se utilizan de forma exclusiva para:
+        </p>
+        <ol style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            Identificar correos publicitarios antiguos, ofertas caducadas, boletines comerciales masivos y archivos adjuntos pesados en la bandeja de entrada.
+          </li>
+          <li style="margin-bottom: 8px;">
+            Presentar al usuario un resumen clasificado y cuantificado del espacio potencial a liberar.
+          </li>
+          <li style="margin-bottom: 8px;">
+            Ejecutar acciones de limpieza (enviar a la papelera o archivar) <strong>única y exclusivamente tras la orden o confirmación expresa del usuario</strong> mediante las acciones disponibles en la interfaz web.
+          </li>
+        </ol>
+      </section>
+
+      <!-- 4. Política de almacenamiento y no persistencia de correos -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">lock</span>
+          <span>4. Almacenamiento, Retención y Seguridad</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Garantizamos las siguientes medidas estrictas de no retención y confidencialidad:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            <strong>Sin almacenamiento permanente de correos:</strong> La aplicación <strong>NO guarda, NO respalda y NO almacena</strong> el contenido ni los metadatos de tus correos en ninguna base de datos permanente externa. La información se procesa en memoria volátil de forma temporal durante la sesión activa.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Almacenamiento seguro del token de sesión:</strong> El token de autorización OAuth se mantiene únicamente en una sesión temporal cifrada (cookie HTTP segura y protegida contra secuencias de comandos cruzadas con <code>httpOnly</code> y <code>sameSite: lax</code>).
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Cifrado en tránsito:</strong> Todas las comunicaciones entre el navegador, nuestro servidor y las API de Google se efectúan a través de conexiones cifradas seguras utilizando el protocolo HTTPS / TLS.
+          </li>
+        </ul>
+      </section>
+
+      <!-- 5. Procesamiento con Inteligencia Artificial (Google Gemini) -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">psychology</span>
+          <span>5. Procesamiento con Inteligencia Artificial (Google Gemini AI)</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Para categorizar eficazmente los correos electrónicos, la aplicación puede enviar fragmentos de texto (asunto y extracto no confidencial del correo) a los modelos de <strong>Google Gemini API</strong> (versión <code>gemini-3.8-flash</code>).
+        </p>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Bajo las políticas de la API de Google Gemini para desarrolladores, los datos enviados para inferencia <strong>no se utilizan para entrenar los modelos fundacionales de inteligencia artificial de Google</strong> y se descartan tras generar la respuesta de clasificación estructurada.
+        </p>
+      </section>
+
+      <!-- 6. Compartición con Terceros y No Venta de Datos -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">shield</span>
+          <span>6. Prohibición de Venta y No Transferencia a Terceros</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Cumpliendo con los estándares de Google API Services:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            <strong>NO vendemos, comercializamos, transferimos ni alquilamos</strong> tus datos a terceros, empresas de publicidad, corredores de datos ni plataformas de marketing.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Ningún ser humano lee tus correos electrónicos:</strong> El personal del desarrollador no tiene acceso a inspeccionar ni leer correos de usuarios. El procesamiento es 100% automático.
+          </li>
+          <li style="margin-bottom: 8px;">
+            Los datos de usuario de Google solo se transfieren a terceros si es necesario para proporcionar o mejorar las funciones orientadas al usuario que son evidentes desde la interfaz de la aplicación, o para cumplir con la ley aplicable.
+          </li>
+        </ul>
+      </section>
+
+      <!-- 7. Revocación de permisos y eliminación de datos -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">person_remove</span>
+          <span>7. Control del Usuario, Revocación y Eliminación de Acceso</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Tienes el control total sobre tus datos en todo momento:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            <strong>Cierre de Sesión Inmediato:</strong> Al hacer clic en el botón <em>"Cerrar sesión"</em> en la barra de navegación de la aplicación, la sesión activa se destruye y el token de acceso local se borra permanentemente.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Revocación Directa en Google:</strong> Puedes revocar el acceso de <strong>Gmail AI Cleaner</strong> en cualquier momento visitando la página oficial de administración de seguridad de tu cuenta de Google:
+            <br>
+            <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener" style="color: var(--md-primary); font-weight: 500; word-break: break-all;">
+              https://myaccount.google.com/permissions
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <!-- 8. Contacto del Desarrollador -->
+      <section style="border-top: 1px solid var(--md-outline); padding-top: 24px; margin-top: 12px;">
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">contact_support</span>
+          <span>8. Contacto y Consultas de Privacidad</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Si tienes preguntas, sugerencias o inquietudes sobre el tratamiento de tus datos o sobre esta Política de Privacidad, puedes comunicarte directamente con el desarrollador responsable:
+        </p>
+        <div style="background: var(--md-surface-container); border-radius: var(--md-shape-md); padding: 16px 20px; font-size: 14px;">
+          <div><strong>Desarrollador:</strong> Pedro José Pirovani</div>
+          <div style="margin-top: 6px;"><strong>Correo electrónico de soporte:</strong> <a href="mailto:pirovanipedrojose@gmail.com" style="color: var(--md-primary);">pirovanipedrojose@gmail.com</a></div>
+          <div style="margin-top: 6px;"><strong>Repositorio de código abierto:</strong> <a href="https://github.com/pjpirovani-soft/gmail-ai-cleaner" target="_blank" rel="noopener" style="color: var(--md-primary);">github.com/pjpirovani-soft/gmail-ai-cleaner</a></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Botón Inferior para Volver -->
+    <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--md-outline); display: flex; justify-content: flex-end;">
+      <a href="/" class="md-btn md-btn-filled-primary ripple-surface" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 24px; border-radius: var(--md-shape-full); font-size: 14px; font-weight: 500;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+        <span>Volver al inicio</span>
+      </a>
+    </div>
+
+  </article>
+
+</main>
+
+<%- include('partials/footer') %>

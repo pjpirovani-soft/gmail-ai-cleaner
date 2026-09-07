@@ -1,0 +1,211 @@
+<%- include('partials/header', { pageTitle: 'Términos de Servicio' }) %>
+
+<main style="max-width: 960px; margin: 0 auto; padding: 32px 20px 60px 20px;">
+
+  <!-- Breadcrumb & Volver -->
+  <div style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <nav style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--md-on-surface-variant);">
+      <a href="/" style="color: var(--md-primary); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">home</span>
+        <span>Inicio</span>
+      </a>
+      <span>/</span>
+      <span style="color: var(--md-on-surface); font-weight: 500;">Términos de Servicio</span>
+    </nav>
+
+    <a href="/" class="md-btn ripple-surface" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: var(--md-shape-full); font-size: 13px; font-weight: 500; background: var(--md-surface); border: 1px solid var(--md-outline); color: var(--md-primary);">
+      <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+      <span>Volver a la aplicación</span>
+    </a>
+  </div>
+
+  <!-- Tarjeta Principal de Términos de Servicio -->
+  <article class="md-card md-card-elevated-1" style="padding: 36px 32px; background-color: var(--md-surface); border-radius: var(--md-shape-xl); border: 1px solid var(--md-outline);">
+
+    <!-- Encabezado -->
+    <header style="border-bottom: 1px solid var(--md-outline); padding-bottom: 24px; margin-bottom: 28px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--md-secondary-container); color: var(--md-on-secondary-container); padding: 6px 14px; border-radius: var(--md-shape-full); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">description</span>
+        <span>Condiciones Legales de Uso</span>
+      </div>
+      <h1 style="font-size: 28px; font-weight: 700; color: var(--md-on-surface); margin: 0 0 10px 0; line-height: 1.25;">
+        Términos de Servicio de Gmail AI Cleaner
+      </h1>
+      <div style="font-size: 13.5px; color: var(--md-on-surface-variant); display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+        <span><strong>Última actualización:</strong> <%= typeof lastUpdated !== 'undefined' ? lastUpdated : '7 de septiembre de 2026' %></span>
+        <span>•</span>
+        <span><strong>Aplicación:</strong> Gmail AI Cleaner</span>
+        <span>•</span>
+        <span><strong>URL oficial:</strong> <a href="https://gmail-ai-cleaner.vercel.app" target="_blank" rel="noopener" style="color: var(--md-primary);">https://gmail-ai-cleaner.vercel.app</a></span>
+      </div>
+    </header>
+
+    <!-- Resumen Destacado -->
+    <section style="background: var(--md-surface-container); border-left: 4px solid var(--md-secondary); border-radius: 8px; padding: 20px 24px; margin-bottom: 32px;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <span class="material-symbols-outlined" style="font-size: 24px; color: var(--md-secondary); margin-top: 2px;">fact_check</span>
+        <div>
+          <h2 style="font-size: 15px; font-weight: 700; margin: 0 0 6px 0; color: var(--md-on-surface);">
+            Resumen General de los Términos
+          </h2>
+          <p style="font-size: 14px; line-height: 1.6; margin: 0; color: var(--md-on-surface-variant);">
+            Al utilizar <strong>Gmail AI Cleaner</strong>, autorizas el análisis automatizado de correos electrónicos con Inteligencia Artificial. La aplicación opera bajo tu control: <strong>ningún correo se elimina o archiva sin que actives o confirmes la acción</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secciones de Términos -->
+    <div style="display: flex; flex-direction: column; gap: 28px; line-height: 1.65; font-size: 15px; color: var(--md-on-surface);">
+
+      <!-- 1. Aceptación -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">handshake</span>
+          <span>1. Aceptación de los Términos</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Al acceder o utilizar el sitio web y la aplicación <strong>Gmail AI Cleaner</strong> (<a href="https://gmail-ai-cleaner.vercel.app" target="_blank" rel="noopener" style="color: var(--md-primary);">https://gmail-ai-cleaner.vercel.app</a>), aceptas quedar vinculado por estos Términos de Servicio y por nuestra <a href="/privacy" style="color: var(--md-primary); font-weight: 500;">Política de Privacidad</a>.
+        </p>
+        <p style="margin: 0; color: var(--md-on-surface-variant);">
+          Si no estás de acuerdo con alguna parte de estos términos, te rogamos abstenerte de conectar tu cuenta de Google o de utilizar las funciones de la aplicación.
+        </p>
+      </section>
+
+      <!-- 2. Descripción del Servicio -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">cleaning_services</span>
+          <span>2. Descripción del Servicio</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          <strong>Gmail AI Cleaner</strong> es una herramienta de productividad asistida por Inteligencia Artificial (Google Gemini) diseñada para ayudar a los usuarios a:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">Identificar correos electrónicos promocionales antiguos, ofertas vencidas, boletines y notificaciones masivas en su buzón de Gmail.</li>
+          <li style="margin-bottom: 8px;">Detectar mensajes con archivos adjuntos de gran tamaño para facilitar la recuperación de espacio de almacenamiento en Google Drive y Gmail.</li>
+          <li style="margin-bottom: 8px;">Facilitar acciones masivas organizadas como mover a la papelera (trash) o archivar correos seleccionados.</li>
+        </ul>
+      </section>
+
+      <!-- 3. Cuenta de Google y Autenticación OAuth 2.0 -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">account_circle</span>
+          <span>3. Cuenta de Google y Acceso Autorizado</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Para utilizar las funcionalidades reales de la aplicación, debes conectarte mediante el protocolo Google OAuth 2.0. Al hacerlo:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">Garantizas que eres el titular legítimo o estás autorizado para acceder y gestionar la cuenta de Google vinculada.</li>
+          <li style="margin-bottom: 8px;">Entiendes que la aplicación utilizará los tokens provistos por Google para realizar operaciones de lectura y modificación autorizadas en tu nombre.</li>
+          <li style="margin-bottom: 8px;">Puedes cerrar la sesión en cualquier momento o revocar el acceso desde la página de seguridad de tu cuenta de Google.</li>
+        </ul>
+      </section>
+
+      <!-- 4. Responsabilidad y Confirmación de Acciones -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">warning</span>
+          <span>4. Responsabilidad del Usuario y Confirmación de Acciones</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          <strong>Gmail AI Cleaner</strong> proporciona clasificaciones y sugerencias mediante algoritmos de inteligencia artificial y heurísticas, pero el usuario conserva siempre la decisión final:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">
+            <strong>Revisión recomendada:</strong> Aunque el modelo Gemini 3.8 Flash cuenta con alta precisión, recomendamos revisar los correos sugeridos para eliminación antes de ejecutar limpiezas masivas.
+          </li>
+          <li style="margin-bottom: 8px;">
+            <strong>Papelera de Gmail:</strong> Los correos eliminados a través de la aplicación se mueven a la <em>Papelera</em> de tu cuenta de Gmail, donde permanecen recuperables durante el período estándar de 30 días establecido por las políticas de Google.
+          </li>
+          <li style="margin-bottom: 8px;">
+            El usuario es el único responsable de cualquier pérdida de datos provocada por ordenar la eliminación masiva de mensajes importantes.
+          </li>
+        </ul>
+      </section>
+
+      <!-- 5. Uso Aceptable -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">rule</span>
+          <span>5. Uso Aceptable de la Plataforma</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Queda expresamente prohibido:
+        </p>
+        <ul style="margin: 0 0 12px 0; padding-left: 24px; color: var(--md-on-surface-variant);">
+          <li style="margin-bottom: 8px;">Intentar eludir las cuotas de tasa o límites de la API de Gmail o de Google Gemini.</li>
+          <li style="margin-bottom: 8px;">Utilizar la aplicación para actividades fraudulentas, intrusivas, distribución de malware o violación de privacidad de terceros.</li>
+          <li style="margin-bottom: 8px;">Intentar vulnerar la seguridad, autenticación o infraestructura del servidor.</li>
+        </ul>
+      </section>
+
+      <!-- 6. Exención de Garantías y Limitación de Responsabilidad -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">gavel</span>
+          <span>6. Exención de Garantías y Limitación de Responsabilidad</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          EL SERVICIO SE PROPORCIONA "TAL CUAL" ("AS IS") Y "SEGÚN DISPONIBILIDAD" ("AS AVAILABLE"), SIN GARANTÍAS DE NINGÚN TIPO, YA SEAN EXPRESAS O IMPLÍCITAS.
+        </p>
+        <p style="margin: 0; color: var(--md-on-surface-variant);">
+          En ningún caso el desarrollador, colaboradores ni proveedores asociados serán responsables por daños directos, indirectos, incidentales o consecuentes derivados del uso o de la imposibilidad de usar el servicio, incluyendo la pérdida inadvertida de correos electrónicos tras la confirmación de limpieza del usuario.
+        </p>
+      </section>
+
+      <!-- 7. Propiedad Intelectual y Licencia -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">code</span>
+          <span>7. Propiedad Intelectual y Licencia MIT</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          El código fuente de <strong>Gmail AI Cleaner</strong> está publicado bajo la licencia de código abierto <strong>MIT</strong> en GitHub. <em>Gmail</em> y <em>Google</em> son marcas registradas propiedad de Google LLC. Esta aplicación es un desarrollo independiente que interactúa con las API públicas de Google y no está afiliada formalmente ni respaldada por Google LLC.
+        </p>
+      </section>
+
+      <!-- 8. Modificaciones a los Términos -->
+      <section>
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">update</span>
+          <span>8. Modificaciones a los Términos</span>
+        </h2>
+        <p style="margin: 0; color: var(--md-on-surface-variant);">
+          Nos reservamos el derecho de actualizar o modificar estos Términos en cualquier momento para reflejar cambios normativos o de funcionalidades. Las actualizaciones entrarán en vigor a partir de la fecha de publicación indicada en el encabezado de este documento.
+        </p>
+      </section>
+
+      <!-- 9. Contacto -->
+      <section style="border-top: 1px solid var(--md-outline); padding-top: 24px; margin-top: 12px;">
+        <h2 style="font-size: 19px; font-weight: 600; color: var(--md-on-surface); margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary);">mail</span>
+          <span>9. Contacto Legal</span>
+        </h2>
+        <p style="margin: 0 0 12px 0; color: var(--md-on-surface-variant);">
+          Para consultas relacionadas con estos Términos de Servicio, puedes contactar al desarrollador:
+        </p>
+        <div style="background: var(--md-surface-container); border-radius: var(--md-shape-md); padding: 16px 20px; font-size: 14px;">
+          <div><strong>Responsable:</strong> Pedro José Pirovani</div>
+          <div style="margin-top: 6px;"><strong>Correo electrónico:</strong> <a href="mailto:pirovanipedrojose@gmail.com" style="color: var(--md-primary);">pirovanipedrojose@gmail.com</a></div>
+          <div style="margin-top: 6px;"><strong>Sitio web:</strong> <a href="https://gmail-ai-cleaner.vercel.app" target="_blank" rel="noopener" style="color: var(--md-primary);">https://gmail-ai-cleaner.vercel.app</a></div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Botón Inferior para Volver -->
+    <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--md-outline); display: flex; justify-content: flex-end;">
+      <a href="/" class="md-btn md-btn-filled-primary ripple-surface" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 24px; border-radius: var(--md-shape-full); font-size: 14px; font-weight: 500;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+        <span>Volver al inicio</span>
+      </a>
+    </div>
+
+  </article>
+
+</main>
+
+<%- include('partials/footer') %>
