@@ -104,6 +104,53 @@
         </button>
       </div>
 
+      <!-- CAMPO DE INSTRUCCIONES PERSONALIZADAS PARA GEMINI -->
+      <div class="md-instructions-card" id="instruccionesGeminiCard" style="margin-top: 20px; background: var(--md-surface); border: 1.5px solid var(--md-outline); border-radius: 16px; padding: 18px 20px; box-shadow: var(--md-elevation-1); transition: border-color 0.2s, box-shadow 0.2s;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <label for="instruccionesPersonalizadas" style="display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: var(--md-on-surface); cursor: pointer;">
+            <span style="font-size: 18px;">📝</span>
+            <span>Instrucciones personalizadas para Gemini (opcional)</span>
+          </label>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="charCountInstructions" style="font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant); background: var(--md-surface-variant); padding: 2px 8px; border-radius: 10px;">0 / 500</span>
+          </div>
+        </div>
+
+        <div style="position: relative; margin-bottom: 10px;">
+          <textarea 
+            id="instruccionesPersonalizadas" 
+            name="instruccionesPersonalizadas"
+            maxlength="500" 
+            rows="3" 
+            placeholder="Ejemplo: No elimines correos de mi jefe ni del banco. Archiva todas las facturas. Solo conserva correos de familia y trabajo."
+            style="width: 100%; box-sizing: border-box; resize: vertical; min-height: 80px; max-height: 180px; padding: 12px 14px; font-size: 14px; line-height: 1.5; font-family: inherit; color: var(--md-on-surface); background-color: var(--md-surface-variant); border: 1px solid var(--md-outline); border-radius: 12px; outline: none; transition: border-color 0.2s, background-color 0.2s;"
+          ></textarea>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--md-on-surface-variant);">
+            <span style="font-size: 16px;">💡</span>
+            <span>Escribe instrucciones para que Gemini sepa cómo clasificar tus correos</span>
+          </div>
+          
+          <!-- Botones de sugerencias rápidas para facilitar la personalización -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="md-chip md-chip-filter" style="font-size: 12px; padding: 4px 10px; cursor: pointer;" onclick="insertInstruction('No elimines correos de mi jefe ni del banco.')">
+              🛡️ No borrar jefe ni banco
+            </button>
+            <button type="button" class="md-chip md-chip-filter" style="font-size: 12px; padding: 4px 10px; cursor: pointer;" onclick="insertInstruction('Archiva todas las facturas.')">
+              📁 Archivar facturas
+            </button>
+            <button type="button" class="md-chip md-chip-filter" style="font-size: 12px; padding: 4px 10px; cursor: pointer;" onclick="insertInstruction('Solo conserva correos de familia y trabajo.')">
+              💼 Familia y trabajo
+            </button>
+            <button type="button" class="md-chip md-chip-filter" id="btnClearInstructions" style="font-size: 12px; padding: 4px 10px; cursor: pointer; color: var(--md-error); display: none;" onclick="clearInstructions()">
+              ✕ Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- BARRA DE PROGRESO EN TIEMPO REAL (Lotes de 50 + Tiempo estimado) -->
       <div class="md-warrior-progress-card hidden" id="warriorProgressCard">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">

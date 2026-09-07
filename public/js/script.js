@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initRipples();
   initFloatingLabels();
   initUserMenu();
+  initCustomInstructions();
   initSearchForm();
   initActionButtons();
   initPagination();
@@ -158,6 +159,12 @@ function initSearchForm() {
       const formData = new FormData();
       formData.append('query', query);
       formData.append('limite', String(limite));
+
+      const instruccionesEl = document.getElementById('instruccionesPersonalizadas');
+      const instruccionesPersonalizadas = instruccionesEl ? instruccionesEl.value.trim() : '';
+      if (instruccionesPersonalizadas) {
+        formData.append('instruccionesPersonalizadas', instruccionesPersonalizadas);
+      }
 
       const response = await fetch('/analizar', {
         method: 'POST',
@@ -1042,6 +1049,8 @@ function initWarriorMode() {
       const filterType = filtroTipoSelect ? filtroTipoSelect.value : 'all';
       const excludeSenders = excluirRemitentesInput ? excluirRemitentesInput.value.trim() : '';
       const includeSenders = incluirRemitentesInput ? incluirRemitentesInput.value.trim() : '';
+      const instruccionesInput = document.getElementById('instruccionesPersonalizadas');
+      const instruccionesPersonalizadas = instruccionesInput ? instruccionesInput.value.trim() : '';
 
       // Ask for notification permission early
       if ('Notification' in window && Notification.permission === 'default') {
@@ -1067,7 +1076,12 @@ function initWarriorMode() {
       const prepRes = await fetch('/api/limpieza-total/preparar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filterType, excludeSenders, includeSenders })
+        body: JSON.stringify({
+          filterType,
+          excludeSenders,
+          includeSenders,
+          instruccionesPersonalizadas
+        })
       });
 
       const prepData = await prepRes.json();
@@ -1119,7 +1133,8 @@ function initWarriorMode() {
             batchSize,
             filterType,
             excludeSenders,
-            includeSenders
+            includeSenders,
+            instruccionesPersonalizadas
           })
         });
 
@@ -1358,6 +1373,106 @@ function initWarriorMode() {
       }
     });
   }
+}
+
+/* ==========================================================================
+   15. Custom Instructions for Gemini Controller
+   ========================================================================== */
+function initCustomInstructions() {
+  const textarea = document.getElementById('instruccionesPersonalizadas');
+  const counter = document.getElementById('charCountInstructions');
+  const btnClear = document.getElementById('btnClearInstructions');
+  const storageKey = 'gmail_cleaner_custom_instructions';
+
+  if (!textarea) return;
+
+  // Restore saved instructions from localStorage
+  const saved = localStorage.getItem(storageKey);
+  if (saved && !textarea.value) {
+    textarea.value = saved;
+  }
+
+  // Update character count and UI state
+  function updateState() {
+    const len = textarea.value.length;
+    if (counter) {
+      counter.textContent = `${len} / 500`;
+      if (len >= 480) {
+        counter.style.color = 'var(--md-error)';
+        counter.style.fontWeight = '700';
+      } else if (len >= 400) {
+        counter.style.color = 'var(--md-tertiary)';
+        counter.style.fontWeight = '600';
+      } else {
+        counter.style.color = 'var(--md-on-surface-variant)';
+        counter.style.fontWeight = '500';
+      }
+    }
+
+    if (btnClear) {
+      btnClear.style.display = len > 0 ? 'inline-flex' : 'none';
+    }
+
+    // Save automatically
+    if (len > 0) {
+      localStorage.setItem(storageKey, textarea.value);
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  }
+
+  textarea.addEventListener('input', updateState);
+  textarea.addEventListener('change', updateState);
+
+  // Focus and blur styling effects
+  textarea.addEventListener('focus', () => {
+    const card = document.getElementById('instruccionesGeminiCard');
+    if (card) {
+      card.style.borderColor = 'var(--md-primary)';
+      card.style.boxShadow = '0 0 0 3px rgba(26, 115, 232, 0.15)';
+    }
+  });
+
+  textarea.addEventListener('blur', () => {
+    const card = document.getElementById('instruccionesGeminiCard');
+    if (card) {
+      card.style.borderColor = 'var(--md-outline)';
+      card.style.boxShadow = 'var(--md-elevation-1)';
+    }
+  });
+
+  // Initial state check
+  updateState();
+
+  // Expose global helper methods for suggestions
+  window.insertInstruction = function(text) {
+    if (!textarea) return;
+    const current = textarea.value.trim();
+    if (!current) {
+      textarea.value = text;
+    } else if (current.includes(text)) {
+      showSnackbar('Esta regla ya está incluida en tus instrucciones', 'info', 3000);
+      return;
+    } else {
+      const combined = `${current} ${text}`;
+      if (combined.length > 500) {
+        showSnackbar('No se puede agregar: supera el límite de 500 caracteres', 'warning', 4000);
+        return;
+      }
+      textarea.value = combined;
+    }
+    updateState();
+    textarea.focus();
+    showSnackbar('Regla agregada a las instrucciones de Gemini', 'info', 3000);
+  };
+
+  window.clearInstructions = function() {
+    if (!textarea) return;
+    textarea.value = '';
+    updateState();
+    textarea.focus();
+    showSnackbar('Instrucciones personalizadas eliminadas', 'info', 2500);
+  };
 }
 
 

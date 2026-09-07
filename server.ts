@@ -257,10 +257,34 @@ interface UndoRecord {
 
 let lastUndoRecord: UndoRecord | null = null;
 
-// Heuristic rule-based classifier
-function fallbackClassification(correo: { asunto: string; remitente: string; resumen: string }): 'Eliminar' | 'Archivar' | 'Conservar' {
+// Heuristic rule-based classifier with support for custom instructions
+function fallbackClassification(
+  correo: { asunto: string; remitente: string; resumen: string },
+  instruccionesPersonalizadas?: string
+): 'Eliminar' | 'Archivar' | 'Conservar' {
   const text = `${correo.remitente} ${correo.asunto} ${correo.resumen}`.toLowerCase();
   
+  // Apply quick safety heuristics if custom instructions are provided
+  if (instruccionesPersonalizadas && instruccionesPersonalizadas.trim()) {
+    const inst = instruccionesPersonalizadas.toLowerCase();
+    
+    // Safety rules: if user asks to protect boss, bank, work, family
+    if ((inst.includes('no elimines') || inst.includes('no borrar') || inst.includes('conserva') || inst.includes('no tocar')) &&
+        ((inst.includes('banco') && (text.includes('banco') || text.includes('santander') || text.includes('bbva') || text.includes('galicia'))) ||
+         (inst.includes('jefe') && (text.includes('jefe') || text.includes('gerente') || text.includes('director') || text.includes('boss'))) ||
+         (inst.includes('trabajo') && (text.includes('trabajo') || text.includes('proyecto') || text.includes('laboral') || text.includes('work'))) ||
+         (inst.includes('familia') && (text.includes('familia') || text.includes('mamá') || text.includes('papá') || text.includes('hijo'))))) {
+      return 'Conservar';
+    }
+
+    // Archive rules: if user asks to archive invoices or receipts
+    if (inst.includes('archiva') || inst.includes('archivar')) {
+      if (inst.includes('factura') && (text.includes('factura') || text.includes('recibo') || text.includes('comprobante') || text.includes('ticket'))) {
+        return 'Archivar';
+      }
+    }
+  }
+
   if (text.includes('descuento') || text.includes('oferta') || text.includes('promo') || 
       text.includes('notifications@') || text.includes('notificacion') || text.includes('70% off') ||
       text.includes('publicidad') || text.includes('spam') || text.includes('shein') ||
@@ -280,18 +304,31 @@ function fallbackClassification(correo: { asunto: string; remitente: string; res
   return 'Conservar';
 }
 
-// Intelligent classifier using Gemini 2.5 Flash
-async function clasificarConGemini(correo: { asunto: string; remitente: string; resumen: string }): Promise<'Eliminar' | 'Archivar' | 'Conservar'> {
+// Intelligent classifier using Gemini 2.5 Flash with custom user instructions
+async function clasificarConGemini(
+  correo: { asunto: string; remitente: string; resumen: string },
+  instruccionesPersonalizadas?: string
+): Promise<'Eliminar' | 'Archivar' | 'Conservar'> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return fallbackClassification(correo);
+    return fallbackClassification(correo, instruccionesPersonalizadas);
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = `Actúa como un organizador inteligente de correos de Gmail con precisión estricta.
+
+    // Custom instructions prioritized at the very beginning of the prompt
+    let userInstructionsBlock = '';
+    if (instruccionesPersonalizadas && instruccionesPersonalizadas.trim()) {
+      userInstructionsBlock = `Instrucciones personalizadas del usuario: ${instruccionesPersonalizadas.trim()}
+IMPORTANTE: Debes dar MÁXIMA PRIORIDAD a estas instrucciones personalizadas del usuario sobre cualquier otra regla general de clasificación.
+
+`;
+    }
+
+    const prompt = `${userInstructionsBlock}Actúa como un organizador inteligente de correos de Gmail con precisión estricta.
 Clasifica este correo exactamente en una de estas 3 opciones:
-- "Eliminar": Si es publicidad vieja, promociones caducadas, spam, notificaciones automáticas o newsletters que ya no aportan valor.
+- "Eliminar": Si es publicidad vieja, promociones caducadas, spam, notificaciones automáticas o newsletters que ya no aportan valor (salvo que las instrucciones personalizadas del usuario indiquen lo contrario).
 - "Archivar": Si es un boletín/newsletter leído, factura o recibo antiguo, confirmación de compra o reserva útil como historial contable/personal pero no urgente.
 - "Conservar": Si es un correo personal, laboral importante, alerta de seguridad o información vigente imprescindible.
 
@@ -311,10 +348,10 @@ Responde ÚNICAMENTE con una sola palabra: Eliminar, Archivar o Conservar.`;
     if (/eliminar/i.test(output)) return 'Eliminar';
     if (/archivar/i.test(output)) return 'Archivar';
     if (/conservar/i.test(output)) return 'Conservar';
-    return fallbackClassification(correo);
+    return fallbackClassification(correo, instruccionesPersonalizadas);
   } catch (error: any) {
     logger.warn('Gemini API call failed, falling back to heuristic:', error.message);
-    return fallbackClassification(correo);
+    return fallbackClassification(correo, instruccionesPersonalizadas);
   }
 }
 
@@ -345,6 +382,7 @@ function getFilteredInboxItems(filterType: string, customQuery?: string): EmailI
   if (customQuery && customQuery.trim()) {
     const q = customQuery.toLowerCase().trim();
     list = list.filter(c => {
+      if (q === 'in:inbox' || q === 'is:unread' || q === 'all' || q === '*') return true;
       if (q.includes('older_than:1y')) return c.isOlderThan1Year;
       if (q.includes('larger:10m')) return c.sizeBytes >= 10 * 1024 * 1024;
       if (q.includes('from:newsletter')) return c.remitente.toLowerCase().includes('newsletter');
@@ -393,8 +431,9 @@ app.post('/api/limpieza-total/preparar', (req, res) => {
     const customQuery = (req.body.customQuery || '').trim();
     const excludeSenders = (req.body.excludeSenders || '').trim();
     const includeSenders = (req.body.includeSenders || '').trim();
+    const instruccionesPersonalizadas = (req.body.instruccionesPersonalizadas || req.body.customInstructions || '').toString().trim().slice(0, 500);
 
-    logger.info(`[WARRIOR MODE] Preparing total cleanup: filterType=${filterType}`);
+    logger.info(`[WARRIOR MODE] Preparing total cleanup: filterType=${filterType}, hasCustomInstructions=${Boolean(instruccionesPersonalizadas)}`);
 
     const matchingItems = getFilteredInboxItems(filterType, customQuery);
     const totalEmails = matchingItems.length;
@@ -420,7 +459,8 @@ app.post('/api/limpieza-total/preparar', (req, res) => {
       filterType,
       filterDescription: filterDescriptions[filterType] || filterDescriptions['all'],
       excludeSenders,
-      includeSenders
+      includeSenders,
+      hasCustomInstructions: Boolean(instruccionesPersonalizadas)
     });
   } catch (error: any) {
     logger.error('Error preparing warrior cleanup:', error);
@@ -437,6 +477,7 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
     const customQuery = (req.body.customQuery || '').trim();
     const excludeInput = (req.body.excludeSenders || '').trim().toLowerCase();
     const includeInput = (req.body.includeSenders || '').trim().toLowerCase();
+    const instruccionesPersonalizadas = (req.body.instruccionesPersonalizadas || req.body.customInstructions || '').toString().trim().slice(0, 500);
 
     // Parse list of excluded and included senders
     const excludeList = excludeInput ? excludeInput.split(',').map(s => s.trim()).filter(Boolean) : [];
@@ -449,7 +490,7 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
     const endIndex = Math.min(startIndex + batchSize, totalMatching);
     const batchSlice = allMatching.slice(startIndex, endIndex);
 
-    logger.info(`[WARRIOR MODE] Processing Batch #${batchIndex + 1}: items ${startIndex + 1} to ${endIndex} of ${totalMatching}`);
+    logger.info(`[WARRIOR MODE] Processing Batch #${batchIndex + 1}: items ${startIndex + 1} to ${endIndex} of ${totalMatching} (Custom instructions: ${instruccionesPersonalizadas ? 'YES' : 'NO'})`);
 
     let batchCountEliminar = 0;
     let batchCountArchivar = 0;
@@ -491,8 +532,8 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
           };
         }
 
-        // Classify with Gemini AI (or intelligent heuristic fallback)
-        const clasificacion = await clasificarConGemini(correo);
+        // Classify with Gemini AI (or intelligent heuristic fallback) with user instructions
+        const clasificacion = await clasificarConGemini(correo, instruccionesPersonalizadas);
         if (clasificacion === 'Eliminar') {
           batchCountEliminar++;
           batchFreedBytes += correo.sizeBytes || 0;
@@ -509,7 +550,9 @@ app.post('/api/limpieza-total/procesar-lote', async (req, res) => {
           resumen: correo.resumen,
           sizeBytes: correo.sizeBytes,
           clasificacion,
-          motivo: 'Clasificado con Gemini 2.5 Flash'
+          motivo: instruccionesPersonalizadas 
+            ? 'Clasificado con Gemini (con instrucciones personalizadas)' 
+            : 'Clasificado con Gemini 2.5 Flash'
         };
       })
     );
@@ -671,8 +714,9 @@ app.post('/analizar', async (req, res) => {
   try {
     const query = (req.body.query || '').trim();
     const limite = parseInt(req.body.limite, 10) || 10;
+    const instruccionesPersonalizadas = (req.body.instruccionesPersonalizadas || req.body.customInstructions || '').toString().trim().slice(0, 500);
 
-    logger.info(`Analyzing emails with query="${query}", limit=${limite}`);
+    logger.info(`Analyzing emails with query="${query}", limit=${limite}, hasCustomInstructions=${Boolean(instruccionesPersonalizadas)}`);
 
     if (!query) {
       return res.status(400).json({ error: 'Filtro de búsqueda vacío. Ingresa un término o filtro de Gmail.' });
@@ -686,18 +730,21 @@ app.post('/analizar', async (req, res) => {
       return res.json({ correos: [], total: 0, mensaje: 'No se encontraron correos para el filtro especificado.' });
     }
 
-    logger.info(`Classifying ${toProcess.length} emails...`);
+    logger.info(`Classifying ${toProcess.length} emails (Custom instructions: ${instruccionesPersonalizadas ? 'YES' : 'NO'})...`);
 
     correosProcesados = await Promise.all(
       toProcess.map(async correo => {
-        const clasificacion = await clasificarConGemini(correo);
+        const clasificacion = await clasificarConGemini(correo, instruccionesPersonalizadas);
         return {
           id: correo.id,
           remitente: correo.remitente,
           asunto: correo.asunto,
           resumen: correo.resumen,
           sizeBytes: correo.sizeBytes,
-          clasificacion
+          clasificacion,
+          motivo: instruccionesPersonalizadas 
+            ? 'Clasificado con Gemini (con instrucciones personalizadas)' 
+            : 'Clasificado con Gemini 2.5 Flash'
         };
       })
     );
@@ -707,7 +754,8 @@ app.post('/analizar', async (req, res) => {
     return res.json({
       correos: correosProcesados,
       total: correosProcesados.length,
-      query
+      query,
+      hasCustomInstructions: Boolean(instruccionesPersonalizadas)
     });
   } catch (error: any) {
     logger.error('Error in /analizar endpoint:', error);
