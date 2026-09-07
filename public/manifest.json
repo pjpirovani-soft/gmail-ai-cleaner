@@ -1,0 +1,68 @@
+{
+  "id": "/",
+  "name": "Gmail AI Cleaner",
+  "short_name": "GmailCleaner",
+  "description": "Analizador y limpiador inteligente de correos de Gmail con Google Material Design 3 e Inteligencia Artificial",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#FFFFFF",
+  "background_color": "#F8F9FA",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Analizar Correos",
+      "short_name": "Analizar",
+      "description": "Escanear correos con Gemini AI",
+      "url": "/?action=analyze",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Bandeja Principal",
+      "short_name": "Bandeja",
+      "description": "Ver lista y filtros de correos",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

@@ -36,6 +36,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(upload.none()); // To support multipart/form-data sent via FormData
 app.use(express.static(path.join(process.cwd(), 'public')));
 
+// PWA Service Worker & Manifest routes with required PWA headers
+app.get('/service-worker.js', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(process.cwd(), 'service-worker.js'));
+});
+
+app.get('/manifest.json', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(path.join(process.cwd(), 'public', 'manifest.json'));
+});
+
 interface EmailItem {
   id: string;
   remitente: string;

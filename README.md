@@ -38,6 +38,12 @@
 - **📋 Tabla de Datos Interactiva**:
   - Selección individual y global con casillas de verificación animadas.
   - Cambio de acción en tiempo real por fila mediante menús desplegables.
+  - Paginación dinámica (5 correos por vista) con controles Material.
+- **📱 Progressive Web App (PWA) e Instalación Móvil**:
+  - Totalmente instalable en celulares Android (Chrome) e iOS (Safari).
+  - Soporte offline inteligente con Service Worker y precaché de App Shell.
+  - Web App Manifest con iconos de alta resolución (192px, 512px y maskable).
+  - Consulta la [Guía de Instalación PWA (GUIA_PWA.md)](GUIA_PWA.md).
   - Paginación dinámica con selección de tamaño de página (5, 10, 25).
 - **⚡ Tres Modos de Limpieza Segura**:
   - **🔍 Simulación**: Genera un reporte detallado de lo que ocurriría sin tocar tus correos reales.

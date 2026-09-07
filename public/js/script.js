@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initActionButtons();
   initPagination();
   initSelectionControls();
+  initPwaSupport();
 });
 
 /* ==========================================================================
@@ -683,3 +684,193 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+/* ==========================================================================
+   10. Progressive Web App (PWA) Engine
+   ========================================================================== */
+let deferredPwaPrompt = null;
+
+function initPwaSupport() {
+  const installBtn = document.getElementById('pwaInstallBtn');
+  const menuInstallBtn = document.getElementById('menuInstallPwaBtn');
+  const offlineBadge = document.getElementById('offlineBadge');
+
+  // Check if app is already running in standalone mode (installed)
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+
+  // Check if running on iOS Safari
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+
+  // A. Register Service Worker with error handling and auto-update detection
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+        .then((registration) => {
+          console.log('[PWA] Service Worker registrado exitosamente con scope:', registration.scope);
+
+          // Escuchar nuevas versiones del Service Worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (!newWorker) return;
+
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] Nueva versión disponible');
+                showUpdatePrompt(newWorker);
+              }
+            });
+          });
+        })
+        .catch((error) => {
+          console.warn('[PWA] Error al registrar Service Worker:', error);
+        });
+    });
+
+    // Detectar cuando el nuevo Service Worker toma el control
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+  }
+
+  // B. Chromium / Android / Desktop Install Prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent default mini-infobar
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    console.log('[PWA] Evento beforeinstallprompt capturado');
+
+    if (!isStandalone) {
+      if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+        installBtn.classList.add('pwa-pulse');
+      }
+      if (menuInstallBtn) {
+        menuInstallBtn.style.display = 'flex';
+      }
+    }
+  });
+
+  // Handle Install button clicks
+  const triggerInstall = async () => {
+    if (deferredPwaPrompt) {
+      deferredPwaPrompt.prompt();
+      const { outcome } = await deferredPwaPrompt.userChoice;
+      console.log(`[PWA] Elección del usuario: ${outcome}`);
+      if (outcome === 'accepted') {
+        showSnackbar('¡Instalando Gmail AI Cleaner en tu dispositivo!', 'success');
+        if (installBtn) installBtn.style.display = 'none';
+        if (menuInstallBtn) menuInstallBtn.style.display = 'none';
+      }
+      deferredPwaPrompt = null;
+    } else if (isIOS) {
+      openIosInstallModal();
+    } else {
+      showSnackbar('Para instalar: abre el menú de opciones del navegador y selecciona "Instalar aplicación"', 'info', 6000);
+    }
+  };
+
+  if (installBtn) {
+    installBtn.addEventListener('click', triggerInstall);
+  }
+  if (menuInstallBtn) {
+    menuInstallBtn.addEventListener('click', triggerInstall);
+  }
+
+  // Show button on iOS Safari if not already installed
+  if (isIOS && !isStandalone) {
+    if (installBtn) {
+      installBtn.style.display = 'inline-flex';
+      installBtn.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--md-primary);">phone_iphone</span>
+        <span>Instalar</span>
+      `;
+    }
+    if (menuInstallBtn) {
+      menuInstallBtn.style.display = 'flex';
+    }
+  }
+
+  // C. Successful installation event
+  window.addEventListener('appinstalled', () => {
+    console.log('[PWA] Gmail AI Cleaner ha sido instalado con éxito');
+    if (installBtn) installBtn.style.display = 'none';
+    if (menuInstallBtn) menuInstallBtn.style.display = 'none';
+    showSnackbar('¡Gmail AI Cleaner se instaló con éxito en tu pantalla principal!', 'success', 5000);
+  });
+
+  // D. Offline / Online Connectivity Monitors
+  const updateOnlineStatus = () => {
+    const isOnline = navigator.onLine;
+    if (!isOnline) {
+      if (offlineBadge) offlineBadge.style.display = 'inline-flex';
+      showSnackbar('Sin conexión a Internet. Modo sin conexión activo con datos en caché.', 'warning', 5000);
+    } else {
+      if (offlineBadge) offlineBadge.style.display = 'none';
+      showSnackbar('Conexión a Internet restablecida.', 'success', 3000);
+    }
+  };
+
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+
+  if (!navigator.onLine && offlineBadge) {
+    offlineBadge.style.display = 'inline-flex';
+  }
+}
+
+// Modal iOS Safari
+window.openIosInstallModal = function() {
+  const modal = document.getElementById('iosInstallModal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeIosInstallModal = function() {
+  const modal = document.getElementById('iosInstallModal');
+  if (modal) modal.style.display = 'none';
+};
+
+// Notification of Service Worker Updates
+function showUpdatePrompt(worker) {
+  const container = document.getElementById('snackbarContainer');
+  if (!container) return;
+
+  const updateBar = document.createElement('div');
+  updateBar.className = 'md-snackbar info';
+  updateBar.style.backgroundColor = '#174ea6';
+  updateBar.style.borderLeft = '4px solid #8ab4f8';
+  updateBar.innerHTML = `
+    <span class="material-symbols-outlined" style="font-size: 20px;">system_update</span>
+    <span style="flex: 1;">Nueva versión 2.0 disponible.</span>
+    <button id="reloadPwaBtn" style="background: #ffffff; color: #174ea6; border: none; font-weight: 500; font-size: 12px; padding: 4px 10px; border-radius: 12px; cursor: pointer; margin-right: 8px;">
+      Actualizar
+    </button>
+    <button class="md-snackbar-close" aria-label="Cerrar">
+      <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+    </button>
+  `;
+
+  container.appendChild(updateBar);
+  requestAnimationFrame(() => updateBar.classList.add('show'));
+
+  const btn = updateBar.querySelector('#reloadPwaBtn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      worker.postMessage({ type: 'SKIP_WAITING' });
+    });
+  }
+
+  const closeBtn = updateBar.querySelector('.md-snackbar-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      updateBar.classList.remove('show');
+      setTimeout(() => updateBar.remove(), 250);
+    });
+  }
+}
+

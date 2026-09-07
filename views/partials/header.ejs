@@ -16,6 +16,18 @@
 
   <!-- Material Design 3 Stylesheet -->
   <link rel="stylesheet" href="/css/material.css">
+
+  <!-- Progressive Web App (PWA) Manifest & Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#FFFFFF">
+  <meta name="background-color" content="#F8F9FA">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="GmailCleaner">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
 </head>
 <body>
 
@@ -27,41 +39,91 @@
       </div>
       <div style="display: flex; align-items: center;">
         <span class="md-app-title">Gmail AI Cleaner</span>
-        <span class="md-app-badge">v2.0 M3</span>
+        <span class="md-app-badge">v2.0 PWA</span>
       </div>
     </a>
 
-    <!-- User Profile Menu -->
-    <div class="md-menu-container">
-      <button class="md-user-button ripple-surface" id="userMenuBtn" aria-label="Menú de usuario" type="button">
-        <div class="md-avatar"><%= typeof userName !== 'undefined' ? userName.charAt(0) : 'P' %></div>
-        <span class="md-user-name"><%= typeof userName !== 'undefined' ? userName : 'Pedro José' %></span>
-        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--md-on-surface-variant);">arrow_drop_down</span>
+    <!-- Header Actions (Install PWA & User Profile) -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- PWA Install Button (Dynamic Chromium/Android & iOS) -->
+      <button id="pwaInstallBtn" class="md-btn md-btn-tonal ripple-surface" type="button" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--md-shape-full); font-size: 13px;">
+        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--md-primary);">install_mobile</span>
+        <span>Instalar App</span>
       </button>
 
-      <!-- Dropdown -->
-      <div class="md-menu" id="userMenu">
-        <div class="md-menu-header">
-          <div class="md-menu-header-name"><%= typeof userName !== 'undefined' ? userName : 'Pedro José Pirovani' %></div>
-          <div class="md-menu-header-email"><%= typeof userEmail !== 'undefined' ? userEmail : 'pirovanipedrojose@gmail.com' %></div>
-          <div style="margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--md-secondary); font-weight: 500;">
-            <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-            <span>Gmail autenticado</span>
+      <!-- Offline Indicator Badge -->
+      <div id="offlineBadge" style="display: none; align-items: center; gap: 6px; background-color: #FEEFC3; color: #7A4B04; padding: 6px 12px; border-radius: var(--md-shape-full); font-size: 12px; font-weight: 500;">
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #E37400;">cloud_off</span>
+        <span>Sin conexión</span>
+      </div>
+
+      <!-- User Profile Menu -->
+      <div class="md-menu-container">
+        <button class="md-user-button ripple-surface" id="userMenuBtn" aria-label="Menú de usuario" type="button">
+          <div class="md-avatar"><%= typeof userName !== 'undefined' ? userName.charAt(0) : 'P' %></div>
+          <span class="md-user-name"><%= typeof userName !== 'undefined' ? userName : 'Pedro José' %></span>
+          <span class="material-symbols-outlined" style="font-size: 18px; color: var(--md-on-surface-variant);">arrow_drop_down</span>
+        </button>
+
+        <!-- Dropdown -->
+        <div class="md-menu" id="userMenu">
+          <div class="md-menu-header">
+            <div class="md-menu-header-name"><%= typeof userName !== 'undefined' ? userName : 'Pedro José Pirovani' %></div>
+            <div class="md-menu-header-email"><%= typeof userEmail !== 'undefined' ? userEmail : 'pirovanipedrojose@gmail.com' %></div>
+            <div style="margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--md-secondary); font-weight: 500;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+              <span>Gmail autenticado</span>
+            </div>
           </div>
+          <button class="md-menu-item" type="button" onclick="showSnackbar('Estado de cuenta activo y sincronizado', 'info')">
+            <span class="material-symbols-outlined">manage_accounts</span>
+            <span>Ajustes de cuenta</span>
+          </button>
+          <button class="md-menu-item" type="button" onclick="showSnackbar('Modelo de clasificación activo: Gemini 2.5 Flash', 'info')">
+            <span class="material-symbols-outlined">psychology</span>
+            <span>Modelo de IA</span>
+          </button>
+          <button class="md-menu-item" type="button" id="menuInstallPwaBtn" style="display: none;">
+            <span class="material-symbols-outlined" style="color: var(--md-primary);">install_mobile</span>
+            <span>Instalar PWA en celular</span>
+          </button>
+          <hr style="border: none; border-top: 1px solid var(--md-surface-container); margin: 4px 0;">
+          <button class="md-menu-item" type="button" onclick="handleLogout()" style="color: var(--md-error);">
+            <span class="material-symbols-outlined" style="color: var(--md-error);">logout</span>
+            <span>Cerrar sesión</span>
+          </button>
         </div>
-        <button class="md-menu-item" type="button" onclick="showSnackbar('Estado de cuenta activo y sincronizado', 'info')">
-          <span class="material-symbols-outlined">manage_accounts</span>
-          <span>Ajustes de cuenta</span>
-        </button>
-        <button class="md-menu-item" type="button" onclick="showSnackbar('Modelo de clasificación activo: Gemini 2.5 Flash', 'info')">
-          <span class="material-symbols-outlined">psychology</span>
-          <span>Modelo de IA</span>
-        </button>
-        <hr style="border: none; border-top: 1px solid var(--md-surface-container); margin: 4px 0;">
-        <button class="md-menu-item" type="button" onclick="handleLogout()" style="color: var(--md-error);">
-          <span class="material-symbols-outlined" style="color: var(--md-error);">logout</span>
-          <span>Cerrar sesión</span>
-        </button>
       </div>
     </div>
   </header>
+
+  <!-- iOS Safari Add to Home Screen Instructions Modal -->
+  <div id="iosInstallModal" class="md-modal-backdrop" style="display: none;">
+    <div class="md-card md-card-elevated-3" style="max-width: 420px; width: 90%; margin: auto; padding: 24px; position: relative;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+        <div class="md-logo-icon" style="width: 44px; height: 44px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 26px;">phone_iphone</span>
+        </div>
+        <div>
+          <h2 style="font-size: 18px; font-weight: 500; margin: 0; color: var(--md-on-surface);">Instalar en iPhone / iPad</h2>
+          <span style="font-size: 13px; color: var(--md-on-surface-variant);">Safari en iOS</span>
+        </div>
+      </div>
+
+      <p style="font-size: 14px; color: var(--md-on-surface-variant); line-height: 1.5; margin-bottom: 16px;">
+        Para instalar <strong>Gmail AI Cleaner</strong> en tu dispositivo Apple sin pasar por la App Store:
+      </p>
+
+      <ol style="font-size: 14px; color: var(--md-on-surface); line-height: 1.8; margin-left: 20px; margin-bottom: 24px; padding-left: 0;">
+        <li>Toca el botón <strong>Compartir</strong> <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px;">ios_share</span> en la barra de Safari.</li>
+        <li>Desplázate hacia abajo y selecciona <strong>"Agregar a pantalla de inicio"</strong>.</li>
+        <li>Pulsa <strong>"Agregar"</strong> en la esquina superior derecha.</li>
+      </ol>
+
+      <div style="display: flex; justify-content: flex-end;">
+        <button type="button" class="md-btn md-btn-filled-primary ripple-surface" onclick="closeIosInstallModal()">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>

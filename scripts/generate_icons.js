@@ -1,0 +1,138 @@
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+
+const ICONS_DIR = path.join(process.cwd(), 'public', 'icons');
+if (!fs.existsSync(ICONS_DIR)) {
+  fs.mkdirSync(ICONS_DIR, { recursive: true });
+}
+
+// Standard Icon SVG (Any)
+const standardSvg = `
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A73E8"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FBBC04"/>
+      <stop offset="100%" stop-color="#EA4335"/>
+    </linearGradient>
+    <filter id="shadow" x="30" y="30" width="452" height="452" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect x="32" y="32" width="448" height="448" rx="100" fill="url(#bgGrad)" filter="url(#shadow)"/>
+
+  <!-- Stylized Mail Envelop in Material Design White -->
+  <g transform="translate(106, 120)">
+    <!-- Main Envelope Body -->
+    <rect x="0" y="30" width="300" height="210" rx="24" fill="#FFFFFF" opacity="0.96"/>
+    
+    <!-- Red Fold Left Accent -->
+    <path d="M 0 54 L 150 160 L 0 240 Z" fill="#EA4335" opacity="0.9"/>
+    
+    <!-- Blue Fold Right Accent -->
+    <path d="M 300 54 L 150 160 L 300 240 Z" fill="#4285F4" opacity="0.9"/>
+    
+    <!-- Green Fold Top V Accent -->
+    <path d="M 24 30 L 150 135 L 276 30 Z" fill="#34A853" opacity="0.9"/>
+  </g>
+
+  <!-- AI Sparkle / Magic Star (Material Gemini Spark) -->
+  <g transform="translate(320, 80)">
+    <circle cx="50" cy="50" r="58" fill="#1A73E8" stroke="#FFFFFF" stroke-width="8"/>
+    <!-- 4-point Diamond Sparkle -->
+    <path d="M 50 14 C 50 34 34 50 14 50 C 34 50 50 66 50 86 C 50 66 66 50 86 50 C 66 50 50 34 50 14 Z" fill="url(#sparkGrad)"/>
+    <circle cx="50" cy="50" r="6" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Small secondary sparkle -->
+  <g transform="translate(80, 270)">
+    <path d="M 24 6 C 24 16 16 24 6 24 C 16 24 24 32 24 42 C 24 32 32 24 42 24 C 32 24 24 16 24 6 Z" fill="#FBBC04"/>
+  </g>
+</svg>
+`;
+
+// Maskable Icon SVG (with 15% safe-zone margin full bleed)
+const maskableSvg = `
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradMask" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A73E8"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </linearGradient>
+    <linearGradient id="sparkGradMask" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FBBC04"/>
+      <stop offset="100%" stop-color="#EA4335"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Bleed Background for Safe Cropping -->
+  <rect width="512" height="512" fill="url(#bgGradMask)"/>
+
+  <!-- Content scaled inside 80% Safe Zone -->
+  <g transform="translate(136, 155) scale(0.8)">
+    <!-- Main Envelope Body -->
+    <rect x="0" y="30" width="300" height="210" rx="24" fill="#FFFFFF" opacity="0.96"/>
+    
+    <!-- Red Fold Left Accent -->
+    <path d="M 0 54 L 150 160 L 0 240 Z" fill="#EA4335" opacity="0.9"/>
+    
+    <!-- Blue Fold Right Accent -->
+    <path d="M 300 54 L 150 160 L 300 240 Z" fill="#4285F4" opacity="0.9"/>
+    
+    <!-- Green Fold Top V Accent -->
+    <path d="M 24 30 L 150 135 L 276 30 Z" fill="#34A853" opacity="0.9"/>
+
+    <!-- Sparkle inside safe zone -->
+    <g transform="translate(230, -35)">
+      <circle cx="45" cy="45" r="45" fill="#1A73E8" stroke="#FFFFFF" stroke-width="6"/>
+      <path d="M 45 15 C 45 32 32 45 15 45 C 32 45 45 58 45 75 C 45 58 58 45 75 45 C 58 45 45 32 45 15 Z" fill="url(#sparkGradMask)"/>
+    </g>
+  </g>
+</svg>
+`;
+
+async function generate() {
+  // Save SVG
+  fs.writeFileSync(path.join(ICONS_DIR, 'icon.svg'), standardSvg.trim());
+  fs.writeFileSync(path.join(ICONS_DIR, 'icon-maskable.svg'), maskableSvg.trim());
+
+  // Generate 192x192 PNG
+  await sharp(Buffer.from(standardSvg))
+    .resize(192, 192)
+    .png()
+    .toFile(path.join(ICONS_DIR, 'icon-192x192.png'));
+
+  // Generate 512x512 PNG
+  await sharp(Buffer.from(standardSvg))
+    .resize(512, 512)
+    .png()
+    .toFile(path.join(ICONS_DIR, 'icon-512x512.png'));
+
+  // Generate Maskable 512x512 PNG
+  await sharp(Buffer.from(maskableSvg))
+    .resize(512, 512)
+    .png()
+    .toFile(path.join(ICONS_DIR, 'icon-maskable-512x512.png'));
+
+  // Generate 180x180 PNG for Apple Touch Icon
+  await sharp(Buffer.from(standardSvg))
+    .resize(180, 180)
+    .png()
+    .toFile(path.join(ICONS_DIR, 'apple-touch-icon.png'));
+
+  // Generate Favicon 48x48 and 32x32
+  await sharp(Buffer.from(standardSvg))
+    .resize(48, 48)
+    .png()
+    .toFile(path.join(ICONS_DIR, 'favicon-48x48.png'));
+
+  console.log('Icons successfully generated in public/icons');
+}
+
+generate().catch(console.error);
