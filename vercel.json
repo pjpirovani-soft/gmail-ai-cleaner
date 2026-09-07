@@ -1,5 +1,17 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "server.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.ts"
+    }
+  ],
   "headers": [
     {
       "source": "/service-worker.js",
@@ -30,20 +42,6 @@
           "value": "application/manifest+json; charset=utf-8"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/service-worker.js",
-      "destination": "/public/service-worker.js"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/server.ts"
     }
   ]
 }
