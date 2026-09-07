@@ -877,3 +877,333 @@ body {
   animation: pulsePwa 2.5s infinite ease-in-out;
 }
 
+/* ==========================================================================
+   DARK THEME PALETTE (Material Design 3 Dark Mode)
+   ========================================================================== */
+[data-theme="dark"] {
+  --md-primary: #8ab4f8;
+  --md-primary-hover: #aecbfa;
+  --md-primary-container: #174ea6;
+  --md-on-primary: #202124;
+  --md-on-primary-container: #d2e3fc;
+
+  --md-secondary: #81c995;
+  --md-secondary-hover: #a8dab5;
+  --md-secondary-container: #137333;
+  --md-on-secondary: #202124;
+  --md-on-secondary-container: #ceead6;
+
+  --md-tertiary: #fdd663;
+  --md-tertiary-hover: #fde293;
+  --md-tertiary-container: #b06000;
+  --md-on-tertiary: #202124;
+  --md-on-tertiary-container: #feefc3;
+
+  --md-error: #f28b82;
+  --md-error-hover: #f6aea9;
+  --md-error-container: #c5221f;
+  --md-on-error: #202124;
+  --md-on-error-container: #fce8e6;
+
+  --md-surface: #202124;
+  --md-surface-variant: #17181a;
+  --md-surface-container: #292a2d;
+  --md-surface-dim: #303134;
+  --md-outline: #3c4043;
+  --md-outline-variant: #4a4d51;
+
+  --md-on-surface: #e8eaed;
+  --md-on-surface-variant: #9aa0a6;
+  --md-on-surface-disabled: #5f6368;
+
+  --md-elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --md-elevation-2: 0 2px 6px 2px rgba(0, 0, 0, 0.45);
+  --md-elevation-3: 0 4px 8px 3px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="dark"] body {
+  background-color: var(--md-surface-variant);
+  color: var(--md-on-surface);
+}
+
+[data-theme="dark"] .md-app-bar {
+  background-color: var(--md-surface);
+  border-bottom-color: var(--md-outline);
+}
+
+[data-theme="dark"] .md-card {
+  background-color: var(--md-surface);
+  border-color: var(--md-outline);
+}
+
+[data-theme="dark"] .md-table thead th {
+  background-color: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+}
+
+[data-theme="dark"] .md-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .md-table tbody tr.selected {
+  background-color: rgba(138, 180, 248, 0.12);
+}
+
+[data-theme="dark"] .md-menu {
+  background-color: var(--md-surface-container);
+  border-color: var(--md-outline);
+}
+
+[data-theme="dark"] .md-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   WARRIOR MODE (MODO GUERRERO) STYLES
+   ========================================================================== */
+.md-warrior-card {
+  background: linear-gradient(180deg, var(--md-surface) 0%, var(--md-surface-variant) 100%);
+  border: 1px solid rgba(234, 67, 53, 0.3);
+  box-shadow: 0 4px 20px rgba(234, 67, 53, 0.08);
+  border-radius: var(--md-shape-lg);
+  padding: 24px;
+}
+
+.md-warrior-glow-bg {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(234, 67, 53, 0.12) 0%, rgba(234, 67, 53, 0) 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.md-shield-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline);
+  padding: 6px 14px;
+  border-radius: var(--md-shape-full);
+  font-size: 12.5px;
+  color: var(--md-on-surface);
+  font-weight: 500;
+}
+
+/* El botón grande, rojo e irresistible */
+.md-warrior-big-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #ea4335 0%, #d93025 50%, #b31412 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 28px;
+  min-height: 66px;
+  width: 100%;
+  max-width: 580px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(234, 67, 53, 0.45), 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.md-warrior-big-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(234, 67, 53, 0.6), 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #ff4c3b 0%, #ea4335 50%, #c5221f 100%);
+}
+
+.md-warrior-big-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
+}
+
+.md-warrior-big-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.md-warrior-btn-icon {
+  font-size: 34px;
+  color: #ffffff;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: sweepWiggle 3s infinite ease-in-out;
+}
+
+@keyframes sweepWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.md-warrior-btn-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+}
+
+.md-warrior-btn-subtitle {
+  font-size: 13px;
+  opacity: 0.92;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+/* Filtros avanzados container */
+.md-advanced-filters-box {
+  background: var(--md-surface-container);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-md);
+  padding: 16px 20px;
+  margin-top: 14px;
+}
+
+.md-select-full {
+  width: 100%;
+  height: 48px;
+  background-color: var(--md-surface);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-sm);
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--md-on-surface);
+}
+
+/* Live progress bar for warrior mode */
+.md-warrior-progress-card {
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-md);
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: var(--md-elevation-1);
+  animation: fadeIn 0.3s ease;
+}
+
+.md-spinner-small {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(26, 115, 232, 0.2);
+  border-top-color: var(--md-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Summary Card */
+.md-warrior-summary-card {
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-md);
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: var(--md-elevation-2);
+  animation: fadeIn 0.3s ease;
+}
+
+.md-warrior-actions-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Indicator blue card for space freed */
+.md-indicator-card.blue {
+  border-top: 4px solid var(--md-primary);
+}
+
+/* Dialog card */
+.md-dialog-card {
+  max-width: 480px;
+  width: 90%;
+  margin: auto;
+  padding: 24px;
+  position: relative;
+  background-color: var(--md-surface);
+  border-radius: var(--md-shape-lg);
+  box-shadow: var(--md-elevation-4);
+}
+
+/* Floating Undo Banner */
+.md-undo-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #202124;
+  color: #ffffff;
+  border-radius: var(--md-shape-full);
+  padding: 10px 18px 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  z-index: 9999;
+  animation: slideUp 0.25s cubic-bezier(0, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 40px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.md-undo-btn {
+  background: #fbbc04;
+  color: #202124;
+  border: none;
+  border-radius: var(--md-shape-full);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.md-undo-btn:hover {
+  background: #f29900;
+}
+
+/* Header theme toggle button */
+.md-theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--md-outline);
+  color: var(--md-on-surface);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.md-theme-toggle-btn:hover {
+  background-color: var(--md-surface-container);
+}
+
+

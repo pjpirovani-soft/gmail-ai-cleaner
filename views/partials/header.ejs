@@ -28,6 +28,18 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+  <!-- Theme initialization script (prevents flash of unstyled theme) -->
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('gmail_cleaner_theme') || 
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -43,8 +55,13 @@
       </div>
     </a>
 
-    <!-- Header Actions (Install PWA & User Profile) -->
-    <div style="display: flex; align-items: center; gap: 12px;">
+    <!-- Header Actions (Install PWA, Dark Mode & User Profile) -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <!-- Dark Mode Toggle Button -->
+      <button id="themeToggleBtn" class="md-theme-toggle-btn ripple-surface" type="button" aria-label="Cambiar tema claro u oscuro" title="Cambiar a modo oscuro">
+        <span class="material-symbols-outlined" id="themeToggleIcon" style="font-size: 20px;">dark_mode</span>
+      </button>
+
       <!-- PWA Install Button (Dynamic Chromium/Android & iOS) -->
       <button id="pwaInstallBtn" class="md-btn md-btn-tonal ripple-surface" type="button" style="display: none; height: 38px; padding: 0 16px; border-radius: var(--md-shape-full); font-size: 13px;">
         <span class="material-symbols-outlined" style="font-size: 18px; color: var(--md-primary);">install_mobile</span>

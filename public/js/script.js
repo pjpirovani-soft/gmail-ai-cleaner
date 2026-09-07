@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initPagination();
   initSelectionControls();
   initPwaSupport();
+  initThemeToggle();
+  initWarriorMode();
 });
 
 /* ==========================================================================
@@ -313,6 +315,11 @@ function renderTable() {
           <span class="material-symbols-outlined" style="font-size: 16px; color: var(--md-on-surface-variant);">account_circle</span>
           <span style="color: var(--md-on-surface-variant);">${escapeHtml(correo.remitente || 'Desconocido')}</span>
         </div>
+      </td>
+      <td style="white-space: nowrap;">
+        <span style="font-size: 12.5px; font-weight: 500; color: var(--md-on-surface-variant);">
+          ${formatBytes(correo.sizeBytes || 45000)}
+        </span>
       </td>
       <td style="white-space: nowrap;">
         <span class="md-chip md-chip-status ${badgeClass}">
@@ -873,4 +880,484 @@ function showUpdatePrompt(worker) {
     });
   }
 }
+
+/* ==========================================================================
+   11. Helper: Format Bytes Utility
+   ========================================================================== */
+function formatBytes(bytes, decimals = 1) {
+  if (!bytes || bytes <= 0) return '0 B';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+/* ==========================================================================
+   12. Sound Chime & Web Notifications
+   ========================================================================== */
+function playCompletionChime() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    // Pleasant 3-note chord: C5 (523.25Hz), E5 (659.25Hz), G5 (783.99Hz)
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const startTime = ctx.currentTime + (index * 0.12);
+      const stopTime = startTime + 0.6;
+
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, startTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, stopTime);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(stopTime);
+    });
+  } catch (err) {
+    console.debug('[Audio] Could not play chime:', err);
+  }
+}
+
+function sendBrowserNotification(title, body) {
+  try {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png'
+      });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          new Notification(title, {
+            body,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-192x192.png'
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.debug('[Notification] Notification error:', err);
+  }
+}
+
+/* ==========================================================================
+   13. Dark Mode Toggle Controller
+   ========================================================================== */
+function initThemeToggle() {
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  const toggleIcon = document.getElementById('themeToggleIcon');
+  if (!toggleBtn) return;
+
+  const updateIcon = (isDark) => {
+    if (toggleIcon) {
+      toggleIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    }
+    toggleBtn.setAttribute('aria-label', isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    toggleBtn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  };
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  updateIcon(currentTheme === 'dark');
+
+  toggleBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('gmail_cleaner_theme', newTheme);
+    updateIcon(!isDark);
+    showSnackbar(newTheme === 'dark' ? '🌙 Modo oscuro activado' : '☀️ Modo claro activado', 'info', 2000);
+  });
+}
+
+/* ==========================================================================
+   14. Warrior Mode Controller (Limpieza Total con IA en Lotes de 50)
+   ========================================================================== */
+function initWarriorMode() {
+  const btnStart = document.getElementById('btnWarriorStart');
+  const filtroTipoSelect = document.getElementById('filtroTipoSelect');
+  const excluirRemitentesInput = document.getElementById('excluirRemitentesInput');
+  const incluirRemitentesInput = document.getElementById('incluirRemitentesInput');
+
+  const progressCard = document.getElementById('warriorProgressCard');
+  const progressStatusText = document.getElementById('warriorProgressStatusText');
+  const batchIndicator = document.getElementById('warriorBatchIndicator');
+  const timeRemainingEl = document.getElementById('warriorTimeRemaining');
+  const progressBar = document.getElementById('warriorProgressBar');
+
+  const liveEliminarCount = document.getElementById('liveEliminarCount');
+  const liveArchivarCount = document.getElementById('liveArchivarCount');
+  const liveConservarCount = document.getElementById('liveConservarCount');
+  const liveFreedSpace = document.getElementById('liveFreedSpace');
+
+  const summaryCard = document.getElementById('warriorSummaryCard');
+  const summaryTotalBadge = document.getElementById('summaryTotalAnalyzedBadge');
+  const summaryCountEliminar = document.getElementById('summaryCountEliminar');
+  const summaryCountArchivar = document.getElementById('summaryCountArchivar');
+  const summaryCountConservar = document.getElementById('summaryCountConservar');
+  const summarySpaceToFree = document.getElementById('summarySpaceToFree');
+
+  const btnEliminarTodos = document.getElementById('btnEjecutarEliminarTodos');
+  const btnArchivarTodos = document.getElementById('btnEjecutarArchivarTodos');
+  const btnRevisarUno = document.getElementById('btnRevisarUnoPorUno');
+
+  const modalConfirmacion = document.getElementById('modalConfirmacionLimpieza');
+  const modalTexto = document.getElementById('modalConfirmacionTexto');
+  const btnCancelarModal = document.getElementById('btnCancelarModalLimpieza');
+  const btnAceptarModal = document.getElementById('btnAceptarModalLimpieza');
+
+  const undoBanner = document.getElementById('undoFloatingBanner');
+  const undoText = document.getElementById('undoBannerText');
+  const btnDeshacer = document.getElementById('btnDeshacerAccion');
+
+  let currentWarriorState = {
+    totalEmails: 0,
+    totalBatches: 0,
+    batchSize: 50,
+    countEliminar: 0,
+    countArchivar: 0,
+    countConservar: 0,
+    freedBytes: 0,
+    allProcessedItems: []
+  };
+
+  if (!btnStart) return;
+
+  // A. Iniciar Limpieza Total
+  btnStart.addEventListener('click', async () => {
+    try {
+      const filterType = filtroTipoSelect ? filtroTipoSelect.value : 'all';
+      const excludeSenders = excluirRemitentesInput ? excluirRemitentesInput.value.trim() : '';
+      const includeSenders = incluirRemitentesInput ? incluirRemitentesInput.value.trim() : '';
+
+      // Ask for notification permission early
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+
+      btnStart.disabled = true;
+      if (progressCard) progressCard.classList.remove('hidden');
+      if (summaryCard) summaryCard.classList.add('hidden');
+      if (undoBanner) undoBanner.style.display = 'none';
+
+      // Reset metrics
+      if (progressBar) progressBar.style.width = '5%';
+      if (progressStatusText) progressStatusText.textContent = 'Preparando escaneo de bandeja...';
+      if (batchIndicator) batchIndicator.textContent = 'Iniciando...';
+      if (timeRemainingEl) timeRemainingEl.textContent = '⏱️ Estimando tiempo...';
+      if (liveEliminarCount) liveEliminarCount.textContent = '0';
+      if (liveArchivarCount) liveArchivarCount.textContent = '0';
+      if (liveConservarCount) liveConservarCount.textContent = '0';
+      if (liveFreedSpace) liveFreedSpace.textContent = '0 B';
+
+      // 1. Preparar escaneo
+      const prepRes = await fetch('/api/limpieza-total/preparar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filterType, excludeSenders, includeSenders })
+      });
+
+      const prepData = await prepRes.json();
+      if (!prepRes.ok || !prepData.success) {
+        throw new Error(prepData.error || 'Error al preparar la limpieza total');
+      }
+
+      const totalEmails = prepData.totalEmails;
+      const totalBatches = prepData.totalBatches;
+      const batchSize = prepData.batchSize || 50;
+
+      if (totalEmails === 0) {
+        showSnackbar('No se encontraron correos para el filtro seleccionado.', 'info', 4000);
+        if (progressCard) progressCard.classList.add('hidden');
+        btnStart.disabled = false;
+        return;
+      }
+
+      currentWarriorState = {
+        totalEmails,
+        totalBatches,
+        batchSize,
+        countEliminar: 0,
+        countArchivar: 0,
+        countConservar: 0,
+        freedBytes: 0,
+        allProcessedItems: []
+      };
+
+      const startTime = performance.now();
+
+      // 2. Procesar lote por lote secuencialmente (en bloques de 50)
+      for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+        const batchStart = batchIndex * batchSize + 1;
+        const batchEnd = Math.min((batchIndex + 1) * batchSize, totalEmails);
+
+        if (progressStatusText) {
+          progressStatusText.textContent = `Analizando correos ${batchStart}–${batchEnd} de ${totalEmails} con Gemini AI...`;
+        }
+        if (batchIndicator) {
+          batchIndicator.textContent = `Lote ${batchIndex + 1} de ${totalBatches}`;
+        }
+
+        const batchRes = await fetch('/api/limpieza-total/procesar-lote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            batchIndex,
+            batchSize,
+            filterType,
+            excludeSenders,
+            includeSenders
+          })
+        });
+
+        const batchData = await batchRes.json();
+        if (!batchRes.ok || !batchData.success) {
+          throw new Error(batchData.error || `Error en el lote #${batchIndex + 1}`);
+        }
+
+        // Acumular resultados
+        currentWarriorState.countEliminar += batchData.countEliminar || 0;
+        currentWarriorState.countArchivar += batchData.countArchivar || 0;
+        currentWarriorState.countConservar += batchData.countConservar || 0;
+        currentWarriorState.freedBytes += batchData.batchFreedBytes || 0;
+        currentWarriorState.allProcessedItems.push(...(batchData.items || []));
+
+        // Actualizar contadores en vivo
+        if (liveEliminarCount) liveEliminarCount.textContent = String(currentWarriorState.countEliminar);
+        if (liveArchivarCount) liveArchivarCount.textContent = String(currentWarriorState.countArchivar);
+        if (liveConservarCount) liveConservarCount.textContent = String(currentWarriorState.countConservar);
+        if (liveFreedSpace) liveFreedSpace.textContent = formatBytes(currentWarriorState.freedBytes);
+
+        // Barra de progreso y cálculo dinámico de tiempo restante
+        const cumulative = batchData.cumulativeProcessed || batchEnd;
+        const percent = Math.min(100, Math.round((cumulative / totalEmails) * 100));
+        if (progressBar) progressBar.style.width = `${percent}%`;
+
+        const elapsedMs = performance.now() - startTime;
+        const msPerItem = elapsedMs / cumulative;
+        const remainingItems = totalEmails - cumulative;
+        const remainingSec = Math.ceil((remainingItems * msPerItem) / 1000);
+
+        if (timeRemainingEl) {
+          if (remainingItems > 0 && remainingSec > 0) {
+            timeRemainingEl.textContent = remainingSec >= 60 
+              ? `⏱️ Tiempo restante: ~${Math.ceil(remainingSec / 60)} min`
+              : `⏱️ Tiempo restante: ~${remainingSec} seg`;
+          } else {
+            timeRemainingEl.textContent = '⏱️ Casi terminado...';
+          }
+        }
+      }
+
+      // 3. Finalización con éxito
+      if (progressBar) progressBar.style.width = '100%';
+      if (progressStatusText) progressStatusText.textContent = '¡Análisis total completado!';
+      if (timeRemainingEl) timeRemainingEl.textContent = '⏱️ Listo';
+
+      // Chime sonoro y notificación Web Push
+      playCompletionChime();
+      sendBrowserNotification(
+        '🧹 Limpieza Total con IA completada',
+        `Se analizaron ${totalEmails} correos. ${currentWarriorState.countEliminar} listos para eliminar (${formatBytes(currentWarriorState.freedBytes)} liberables).`
+      );
+
+      // Sincronizar estado global con los correos procesados
+      state.correos = [...currentWarriorState.allProcessedItems];
+      state.currentPage = 1;
+      updateSummaryCards();
+
+      // Rellenar y mostrar la tarjeta de resumen final
+      if (summaryTotalBadge) {
+        summaryTotalBadge.textContent = `${totalEmails} correos analizados`;
+      }
+      if (summaryCountEliminar) {
+        summaryCountEliminar.textContent = String(currentWarriorState.countEliminar);
+      }
+      if (summaryCountArchivar) {
+        summaryCountArchivar.textContent = String(currentWarriorState.countArchivar);
+      }
+      if (summaryCountConservar) {
+        summaryCountConservar.textContent = String(currentWarriorState.countConservar);
+      }
+      if (summarySpaceToFree) {
+        summarySpaceToFree.textContent = formatBytes(currentWarriorState.freedBytes);
+      }
+
+      setTimeout(() => {
+        if (progressCard) progressCard.classList.add('hidden');
+        if (summaryCard) summaryCard.classList.remove('hidden');
+        btnStart.disabled = false;
+        showSnackbar(`✅ Análisis completado: ${currentWarriorState.countEliminar} correos marcados para eliminar`, 'success', 5000);
+      }, 500);
+
+    } catch (err) {
+      console.error('Error in Warrior Mode:', err);
+      if (progressCard) progressCard.classList.add('hidden');
+      btnStart.disabled = false;
+      showSnackbar(`❌ Error en Limpieza Total: ${err.message}`, 'error', 5000);
+    }
+  });
+
+  // B. Botón "Eliminar todos los marcados" -> Abre Modal de Confirmación
+  if (btnEliminarTodos) {
+    btnEliminarTodos.addEventListener('click', () => {
+      const count = currentWarriorState.countEliminar;
+      const space = formatBytes(currentWarriorState.freedBytes);
+
+      if (count === 0) {
+        showSnackbar('No hay correos marcados para eliminar en este análisis.', 'info', 3000);
+        return;
+      }
+
+      if (modalTexto) {
+        modalTexto.innerHTML = `Se moverán <strong>${count} correos</strong> a la Papelera de tu cuenta de Gmail, liberando aproximadamente <strong>${space}</strong> de espacio.`;
+      }
+      if (modalConfirmacion) {
+        modalConfirmacion.style.display = 'flex';
+      }
+    });
+  }
+
+  // Cancelar Modal
+  if (btnCancelarModal) {
+    btnCancelarModal.addEventListener('click', () => {
+      if (modalConfirmacion) modalConfirmacion.style.display = 'none';
+    });
+  }
+
+  // C. Confirmar Limpieza Masiva (Mover a Papelera)
+  if (btnAceptarModal) {
+    btnAceptarModal.addEventListener('click', async () => {
+      try {
+        if (modalConfirmacion) modalConfirmacion.style.display = 'none';
+
+        const res = await fetch('/api/limpieza-total/ejecutar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accion: 'eliminar_todos' })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Error al mover correos a la papelera');
+        }
+
+        // Mostrar barra flotante de DESHACER
+        if (undoBanner) {
+          if (undoText) {
+            undoText.textContent = `🗑️ Se enviaron ${data.trashedCount} correos a la papelera. Liberaste ${data.freedFormatted}.`;
+          }
+          undoBanner.style.display = 'flex';
+        }
+
+        // Actualizar datos locales
+        state.correos = state.correos.filter(c => c.clasificacion !== 'Eliminar');
+        state.selectedIds.clear();
+        currentWarriorState.countEliminar = 0;
+        if (summaryCountEliminar) summaryCountEliminar.textContent = '0';
+        if (summarySpaceToFree) summarySpaceToFree.textContent = '0 B';
+
+        updateSummaryCards();
+        renderTable();
+
+        showSnackbar(`🗑️ ${data.message}`, 'success', 6000);
+      } catch (err) {
+        showSnackbar(`❌ Error al eliminar: ${err.message}`, 'error', 5000);
+      }
+    });
+  }
+
+  // D. Botón "Archivar todos los marcados"
+  if (btnArchivarTodos) {
+    btnArchivarTodos.addEventListener('click', async () => {
+      try {
+        const count = currentWarriorState.countArchivar;
+        if (count === 0) {
+          showSnackbar('No hay correos marcados para archivar.', 'info', 3000);
+          return;
+        }
+
+        const res = await fetch('/api/limpieza-total/ejecutar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accion: 'archivar_todos' })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Error al archivar correos');
+        }
+
+        state.correos.forEach(c => {
+          if (c.clasificacion === 'Archivar') {
+            c.clasificacion = 'Conservar';
+          }
+        });
+
+        currentWarriorState.countArchivar = 0;
+        if (summaryCountArchivar) summaryCountArchivar.textContent = '0';
+        updateSummaryCards();
+        renderTable();
+
+        showSnackbar(`📁 ${data.message}`, 'success', 5000);
+      } catch (err) {
+        showSnackbar(`❌ Error al archivar: ${err.message}`, 'error', 5000);
+      }
+    });
+  }
+
+  // E. Botón "Revisar uno por uno"
+  if (btnRevisarUno) {
+    btnRevisarUno.addEventListener('click', () => {
+      const resultadosContainer = document.getElementById('resultadosContainer');
+      const tableContainer = document.getElementById('tableContainer');
+
+      if (resultadosContainer) resultadosContainer.classList.remove('hidden');
+      renderTable();
+
+      if (tableContainer) {
+        tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  // F. Botón Deshacer (Restaurar correos)
+  if (btnDeshacer) {
+    btnDeshacer.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/limpieza-total/deshacer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'No se pudo deshacer la acción');
+        }
+
+        if (undoBanner) undoBanner.style.display = 'none';
+
+        // Recargar el análisis para refrescar
+        showSnackbar(`↩️ ${data.message}`, 'success', 6000);
+        btnStart.click();
+      } catch (err) {
+        showSnackbar(`❌ Error al deshacer: ${err.message}`, 'error', 5000);
+      }
+    });
+  }
+}
+
 

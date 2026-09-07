@@ -1,63 +1,252 @@
 <%- include('partials/header') %>
 
-<main style="max-width: 1100px; margin: 0 auto; padding: 32px 24px;">
+<main style="max-width: 1100px; margin: 0 auto; padding: 28px 20px;">
 
-  <!-- Welcome / Intro Section (Material Design 3) -->
-  <section class="md-card md-card-elevated-1" id="welcomeSection" style="margin-bottom: 24px; background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);">
-    <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-      <div>
-        <div style="display: inline-flex; align-items: center; gap: 6px; background-color: var(--md-primary-container); color: var(--md-on-primary-container); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: var(--md-shape-full); margin-bottom: 12px;">
-          <span class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
-          <span>Potenciado con Gemini AI</span>
+  <!-- =========================================================================
+       1. MODO GUERRERO: LIMPIEZA TOTAL CON IA (El botón grande y rojo)
+       ========================================================================= -->
+  <section class="md-card md-warrior-card" id="warriorCard" style="margin-bottom: 24px; position: relative; overflow: hidden;">
+    <div class="md-warrior-glow-bg"></div>
+
+    <div style="position: relative; z-index: 2;">
+      <!-- Header with warrior badge -->
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(234, 67, 53, 0.12); color: #c5221f; border: 1px solid rgba(234, 67, 53, 0.3); padding: 6px 14px; border-radius: var(--md-shape-full); font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+          <span class="material-symbols-outlined" style="font-size: 18px; color: #ea4335;">local_fire_department</span>
+          <span>MODO GUERRERO • LIMPIEZA AUTOMÁTICA</span>
         </div>
-        <h1 style="font-size: 28px; font-weight: 500; margin: 0 0 8px 0; color: var(--md-on-surface); letter-spacing: -0.3px;">
-          Organiza tu bandeja de entrada con IA
+
+        <div class="md-shield-badge">
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--md-secondary);">verified_user</span>
+          <span>100% Seguro: Mueve a Papelera con Deshacer</span>
+        </div>
+      </div>
+
+      <!-- Main Headline -->
+      <div style="margin-bottom: 20px;">
+        <h1 style="font-size: 26px; font-weight: 600; margin: 0 0 6px 0; color: var(--md-on-surface); letter-spacing: -0.4px;">
+          Limpieza Inteligente y Masiva de Gmail
         </h1>
-        <p style="font-size: 15px; color: var(--md-on-surface-variant); margin: 0; max-width: 650px;">
-          Usa la inteligencia artificial para clasificar y limpiar tus correos de forma segura, reduciendo el desorden digital en segundos.
+        <p style="font-size: 14.5px; color: var(--md-on-surface-variant); margin: 0; max-width: 780px; line-height: 1.5;">
+          Escanea tu bandeja completa procesando automáticamente en <strong>lotes de 50 correos</strong> con Gemini AI.
+          Detecta publicidad caducada, newsletters olvidados y adjuntos pesados para liberar espacio al instante.
         </p>
       </div>
 
-      <!-- Quick Status Pill -->
-      <div style="display: flex; align-items: center; gap: 8px; background: var(--md-surface); border: 1px solid var(--md-outline); padding: 8px 16px; border-radius: var(--md-shape-full); font-size: 13px; color: var(--md-on-surface);">
-        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--md-secondary); display: inline-block;"></span>
-        <span>Modo Seguro: Vista previa y confirmación activa</span>
-      </div>
-    </div>
+      <!-- FILTROS AVANZADOS (Acordeón expandible) -->
+      <div class="md-advanced-filters-box" id="filtrosAvanzadosBox">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 20px;">tune</span>
+          <span style="font-size: 14px; font-weight: 600; color: var(--md-on-surface);">Filtros Avanzados de Selección</span>
+        </div>
 
-    <!-- Quick Filter Chips -->
-    <div style="margin-top: 20px;">
-      <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--md-on-surface-variant); display: block; margin-bottom: 8px;">
-        Filtros rápidos recomendados:
-      </span>
-      <div class="md-chip-group">
-        <button type="button" class="md-chip md-chip-filter" data-filter="older_than:1y" onclick="setFilter('older_than:1y')">
-          <span class="material-symbols-outlined" style="color: var(--md-primary);">calendar_today</span>
-          <span>📅 Correos antiguos</span>
-        </button>
-        <button type="button" class="md-chip md-chip-filter" data-filter="from:newsletter" onclick="setFilter('from:newsletter')">
-          <span class="material-symbols-outlined" style="color: var(--md-tertiary-hover);">newspaper</span>
-          <span>📰 Newsletters</span>
-        </button>
-        <button type="button" class="md-chip md-chip-filter" data-filter="larger:10M" onclick="setFilter('larger:10M')">
-          <span class="material-symbols-outlined" style="color: var(--md-error);">attachment</span>
-          <span>📎 Correos pesados (>10MB)</span>
-        </button>
-        <button type="button" class="md-chip md-chip-filter" data-filter="from:ofertas" onclick="setFilter('from:ofertas')">
-          <span class="material-symbols-outlined" style="color: var(--md-secondary);">sell</span>
-          <span>🏷️ Promociones caducadas</span>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          <!-- Dropdown Tipo de Correos -->
+          <div class="md-text-field">
+            <label for="filtroTipoSelect" style="display: block; font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant); margin-bottom: 6px;">
+              Tipo de correos a escanear:
+            </label>
+            <div class="md-input-wrapper">
+              <select id="filtroTipoSelect" class="md-select md-select-full">
+                <option value="all" selected>📥 Todos (Bandeja de entrada - in:inbox)</option>
+                <option value="promotions">🏷️ Promociones y ofertas (category:promotions)</option>
+                <option value="social">👥 Notificaciones de redes sociales (category:social)</option>
+                <option value="older_1y">📅 Correos viejos de más de 1 año (older_than:1y)</option>
+                <option value="heavy_10m">📎 Correos pesados mayores a 10MB (larger:10M)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Excluir remitentes (No tocar nunca) -->
+          <div class="md-text-field">
+            <label for="excluirRemitentesInput" style="display: block; font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant); margin-bottom: 6px;">
+              🛡️ Excluir remitentes (No eliminar jamás):
+            </label>
+            <div class="md-input-wrapper">
+              <input type="text" 
+                     id="excluirRemitentesInput" 
+                     class="md-input has-value" 
+                     value="jefe@empresa.com, banco@mail.com" 
+                     placeholder="ej. jefe@empresa.com, banco@mail.com">
+            </div>
+            <div class="md-helper-text">
+              <span>Se clasificarán siempre como "Conservar"</span>
+            </div>
+          </div>
+
+          <!-- Incluir remitentes (Eliminar siempre) -->
+          <div class="md-text-field">
+            <label for="incluirRemitentesInput" style="display: block; font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant); margin-bottom: 6px;">
+              🎯 Incluir remitentes (Eliminar siempre):
+            </label>
+            <div class="md-input-wrapper">
+              <input type="text" 
+                     id="incluirRemitentesInput" 
+                     class="md-input" 
+                     placeholder="ej. newsletter@spam.com, ofertas@tienda.com">
+            </div>
+            <div class="md-helper-text">
+              <span>Se marcarán directamente para "Eliminar"</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EL BOTÓN ROJO IRRESISTIBLE DE LIMPIEZA TOTAL -->
+      <div style="display: flex; align-items: center; justify-content: center; margin-top: 24px;">
+        <button type="button" id="btnWarriorStart" class="md-warrior-big-btn ripple-surface">
+          <span class="material-symbols-outlined md-warrior-btn-icon">cleaning_services</span>
+          <div style="text-align: left;">
+            <div class="md-warrior-btn-title">🧹 LIMPIEZA TOTAL CON IA</div>
+            <div class="md-warrior-btn-subtitle">Escanear bandeja en lotes de 50 correos</div>
+          </div>
+          <span class="material-symbols-outlined" style="font-size: 28px; margin-left: auto;">arrow_forward</span>
         </button>
       </div>
+
+      <!-- BARRA DE PROGRESO EN TIEMPO REAL (Lotes de 50 + Tiempo estimado) -->
+      <div class="md-warrior-progress-card hidden" id="warriorProgressCard">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="md-spinner-small"></div>
+            <span id="warriorProgressStatusText" style="font-weight: 600; font-size: 14px; color: var(--md-on-surface);">
+              Iniciando escaneo de bandeja de entrada...
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="md-chip md-chip-status" id="warriorBatchIndicator" style="background: rgba(26, 115, 232, 0.1); color: var(--md-primary); font-weight: 600;">
+              Lote 1 de ...
+            </span>
+            <span id="warriorTimeRemaining" style="font-size: 12.5px; color: var(--md-on-surface-variant); font-weight: 500;">
+              ⏱️ Estimando tiempo...
+            </span>
+          </div>
+        </div>
+
+        <div class="md-linear-progress" style="height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+          <div class="md-linear-progress-bar" id="warriorProgressBar" style="width: 0%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: linear-gradient(90deg, #ea4335, #fbbc04, #34a853);"></div>
+        </div>
+
+        <!-- Live Metrics Chips -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12.5px; color: var(--md-on-surface-variant);">
+          <div style="display: flex; gap: 16px;">
+            <span>🗑️ Para eliminar: <strong id="liveEliminarCount" style="color: var(--md-error);">0</strong></span>
+            <span>📁 Para archivar: <strong id="liveArchivarCount" style="color: var(--md-tertiary-hover);">0</strong></span>
+            <span>✅ Para conservar: <strong id="liveConservarCount" style="color: var(--md-secondary);">0</strong></span>
+          </div>
+          <div>
+            <span>💾 Espacio detectado: <strong id="liveFreedSpace" style="color: var(--md-primary);">0 MB</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESUMEN FINAL DEL ANÁLISIS TOTAL -->
+      <div class="md-warrior-summary-card hidden" id="warriorSummaryCard">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--md-outline); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 26px; color: var(--md-secondary);">check_circle</span>
+            <h2 style="font-size: 18px; font-weight: 600; margin: 0; color: var(--md-on-surface);">
+              ¡Análisis Total Completado con Éxito!
+            </h2>
+          </div>
+          <span class="md-app-badge" id="summaryTotalAnalyzedBadge" style="font-size: 13px; padding: 4px 12px;">
+            200 correos analizados
+          </span>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="md-summary-grid" style="margin-bottom: 20px;">
+          <div class="md-indicator-card red">
+            <div class="md-indicator-icon-wrapper">
+              <span class="material-symbols-outlined">delete_sweep</span>
+            </div>
+            <div>
+              <div class="md-indicator-value" id="summaryCountEliminar">0</div>
+              <div class="md-indicator-label">Listos para eliminar</div>
+            </div>
+          </div>
+
+          <div class="md-indicator-card yellow">
+            <div class="md-indicator-icon-wrapper">
+              <span class="material-symbols-outlined">archive</span>
+            </div>
+            <div>
+              <div class="md-indicator-value" id="summaryCountArchivar">0</div>
+              <div class="md-indicator-label">Listos para archivar</div>
+            </div>
+          </div>
+
+          <div class="md-indicator-card green">
+            <div class="md-indicator-icon-wrapper">
+              <span class="material-symbols-outlined">mark_email_read</span>
+            </div>
+            <div>
+              <div class="md-indicator-value" id="summaryCountConservar">0</div>
+              <div class="md-indicator-label">Conservados intactos</div>
+            </div>
+          </div>
+
+          <!-- Highlight Card: Space to free -->
+          <div class="md-indicator-card blue" style="border: 1px solid rgba(26, 115, 232, 0.4); background: rgba(26, 115, 232, 0.05);">
+            <div class="md-indicator-icon-wrapper" style="background: rgba(26, 115, 232, 0.15); color: var(--md-primary);">
+              <span class="material-symbols-outlined">cloud_download</span>
+            </div>
+            <div>
+              <div class="md-indicator-value" id="summarySpaceToFree" style="color: var(--md-primary);">0 MB</div>
+              <div class="md-indicator-label">Espacio estimado a liberar</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Execution Buttons -->
+        <div class="md-warrior-actions-container">
+          <button type="button" id="btnEjecutarEliminarTodos" class="md-btn md-btn-filled-error ripple-surface" style="height: 48px; padding: 0 24px; font-weight: 600; font-size: 14px;">
+            <span class="material-symbols-outlined">delete_forever</span>
+            <span>Eliminar todos los marcados</span>
+          </button>
+
+          <button type="button" id="btnEjecutarArchivarTodos" class="md-btn md-btn-filled-tertiary ripple-surface" style="height: 48px; padding: 0 20px; font-weight: 600; font-size: 14px;">
+            <span class="material-symbols-outlined">archive</span>
+            <span>Archivar todos los marcados</span>
+          </button>
+
+          <button type="button" id="btnRevisarUnoPorUno" class="md-btn md-btn-tonal ripple-surface" style="height: 48px; padding: 0 20px; font-weight: 500; font-size: 14px;">
+            <span class="material-symbols-outlined">table_view</span>
+            <span>Revisar uno por uno</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </section>
 
-  <!-- Search & Analysis Card -->
+  <!-- =========================================================================
+       2. BÚSQUEDA MANUAL Y ANÁLISIS SELECTIVO (Para filtros personalizados)
+       ========================================================================= -->
   <section class="md-card md-card-elevated-1" id="searchCard" style="margin-bottom: 24px;">
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-      <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 24px;">search</span>
-      <h2 style="font-size: 18px; font-weight: 500; margin: 0; color: var(--md-on-surface);">
-        Buscar y analizar correos
-      </h2>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--md-primary); font-size: 22px;">search</span>
+        <h2 style="font-size: 16px; font-weight: 500; margin: 0; color: var(--md-on-surface);">
+          Búsqueda selectiva y filtros manuales
+        </h2>
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="md-chip-group" style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <button type="button" class="md-chip md-chip-filter" data-filter="older_than:1y" onclick="setFilter('older_than:1y')">
+          <span>📅 Antiguos</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="from:newsletter" onclick="setFilter('from:newsletter')">
+          <span>📰 Newsletters</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="larger:10M" onclick="setFilter('larger:10M')">
+          <span>📎 Pesados (>10MB)</span>
+        </button>
+        <button type="button" class="md-chip md-chip-filter" data-filter="from:ofertas" onclick="setFilter('from:ofertas')">
+          <span>🏷️ Promociones</span>
+        </button>
+      </div>
     </div>
 
     <form id="searchForm">
@@ -73,10 +262,9 @@
                    value="older_than:1y" 
                    autocomplete="off" 
                    required>
-            <label for="queryInput" class="md-floating-label">Filtro de búsqueda (Gmail syntax)</label>
+            <label for="queryInput" class="md-floating-label">Filtro de búsqueda (sintaxis Gmail)</label>
           </div>
           <div class="md-helper-text">
-            <span class="material-symbols-outlined" style="font-size: 14px;">lightbulb</span>
             <span>Ejemplos: older_than:1y, from:newsletter, larger:10M</span>
           </div>
         </div>
@@ -101,14 +289,14 @@
         </div>
 
         <!-- Elevated Analyze Button -->
-        <button type="submit" id="analizarBtn" class="md-btn md-btn-filled-primary" style="height: 52px; padding: 0 28px;">
+        <button type="submit" id="analizarBtn" class="md-btn md-btn-filled-primary" style="height: 52px; padding: 0 24px;">
           <span class="material-symbols-outlined" style="font-size: 20px;">smart_toy</span>
           <span>Analizar</span>
         </button>
       </div>
     </form>
 
-    <!-- Linear Progress Bar (Material 3) -->
+    <!-- Linear Progress Bar (Individual Search) -->
     <div class="md-progress-container" id="progressContainer">
       <div class="md-progress-header">
         <span id="progressText">Analizando correo 1 de 10 con Gemini...</span>
@@ -120,52 +308,18 @@
     </div>
   </section>
 
-  <!-- Results Section -->
+  <!-- =========================================================================
+       3. BANDEJA CLASIFICADA & TABLA DE DATOS (Material Design 3)
+       ========================================================================= -->
   <section id="resultadosContainer" class="hidden">
     
-    <!-- Summary Indicator Cards (M3 Elevated Cards) -->
-    <div class="md-summary-grid" id="summaryGrid">
-      
-      <!-- Card Red: Para Eliminar -->
-      <div class="md-indicator-card red" id="cardEliminar">
-        <div class="md-indicator-icon-wrapper">
-          <span class="material-symbols-outlined">delete_sweep</span>
-        </div>
-        <div>
-          <div class="md-indicator-value" id="badgeEliminar">0</div>
-          <div class="md-indicator-label">Para eliminar</div>
-        </div>
-      </div>
-
-      <!-- Card Yellow: Para Archivar -->
-      <div class="md-indicator-card yellow" id="cardArchivar">
-        <div class="md-indicator-icon-wrapper">
-          <span class="material-symbols-outlined">archive</span>
-        </div>
-        <div>
-          <div class="md-indicator-value" id="badgeArchivar">0</div>
-          <div class="md-indicator-label">Para archivar</div>
-        </div>
-      </div>
-
-      <!-- Card Green: Para Conservar -->
-      <div class="md-indicator-card green" id="cardConservar">
-        <div class="md-indicator-icon-wrapper">
-          <span class="material-symbols-outlined">mark_email_read</span>
-        </div>
-        <div>
-          <div class="md-indicator-value" id="badgeConservar">0</div>
-          <div class="md-indicator-label">Para conservar</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Data Table Container (Material 3) -->
     <div class="md-table-container" id="tableContainer">
-      <div style="padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--md-outline);">
+      <div style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--md-outline); flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <h3 style="margin: 0; font-size: 16px; font-weight: 500; color: var(--md-on-surface);">
-            Bandeja clasificada
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--md-on-surface); display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="font-size: 20px; color: var(--md-primary);">inbox</span>
+            <span>Bandeja clasificada detallada</span>
           </h3>
           <span id="selectedCountText" style="font-size: 13px; color: var(--md-primary); font-weight: 500;"></span>
         </div>
@@ -182,8 +336,9 @@
               </th>
               <th>Asunto</th>
               <th>Remitente</th>
-              <th>Recomendación</th>
-              <th>Acción</th>
+              <th>Tamaño</th>
+              <th>Recomendación IA</th>
+              <th>Acción individual</th>
             </tr>
           </thead>
           <tbody id="tablaCorreos">
@@ -199,6 +354,7 @@
           <option value="5" selected>5</option>
           <option value="10">10</option>
           <option value="25">25</option>
+          <option value="50">50</option>
         </select>
         <span id="pageRangeText" style="margin-left: 12px;">1–5 de 10</span>
         <button type="button" id="prevPageBtn" class="md-pagination-btn" aria-label="Página anterior" disabled>
@@ -210,7 +366,7 @@
       </div>
     </div>
 
-    <!-- Action Buttons Bar (Material 3 Elevated Buttons) -->
+    <!-- Action Buttons Bar -->
     <div class="md-actions-bar" id="actionsBar">
       <button type="button" id="btnEliminarSeleccionados" class="md-btn md-btn-filled-error" disabled>
         <span class="material-symbols-outlined">delete</span>
@@ -244,6 +400,62 @@
     <div id="resultadosLimpieza"></div>
 
   </section>
+
+  <!-- =========================================================================
+       4. MODAL DE CONFIRMACIÓN DE SEGURIDAD (Antes de limpieza masiva)
+       ========================================================================= -->
+  <div id="modalConfirmacionLimpieza" class="md-modal-backdrop" style="display: none;">
+    <div class="md-card md-card-elevated-3 md-dialog-card">
+      <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px;">
+        <div class="md-indicator-icon-wrapper" style="background: rgba(234, 67, 53, 0.15); color: var(--md-error); width: 44px; height: 44px;">
+          <span class="material-symbols-outlined" style="font-size: 26px;">warning</span>
+        </div>
+        <div>
+          <h2 style="font-size: 18px; font-weight: 600; margin: 0 0 4px 0; color: var(--md-on-surface);">
+            ¿Confirmas la limpieza masiva?
+          </h2>
+          <span style="font-size: 13px; color: var(--md-on-surface-variant);">
+            Mover correos seleccionados a la Papelera de Gmail
+          </span>
+        </div>
+      </div>
+
+      <p id="modalConfirmacionTexto" style="font-size: 14px; color: var(--md-on-surface); line-height: 1.5; margin-bottom: 16px;">
+        Se moverán <strong>0 correos</strong> a la Papelera de tu cuenta, liberando aproximadamente <strong>0 MB</strong> de espacio.
+      </p>
+
+      <div style="background: var(--md-surface-variant); border-radius: var(--md-shape-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 12.5px; color: var(--md-on-surface-variant); display: flex; align-items: center; gap: 10px;">
+        <span class="material-symbols-outlined" style="color: var(--md-secondary); font-size: 20px;">restore_from_trash</span>
+        <span>
+          <strong>Protección activa:</strong> Los correos no se borran definitivamente de inmediato. Permanecen 30 días en la Papelera de Gmail y dispones de un botón <strong>DESHACER</strong> instantáneo.
+        </span>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" id="btnCancelarModalLimpieza" class="md-btn md-btn-tonal ripple-surface">
+          Cancelar
+        </button>
+        <button type="button" id="btnAceptarModalLimpieza" class="md-btn md-btn-filled-error ripple-surface">
+          <span class="material-symbols-outlined">delete_forever</span>
+          <span>Sí, mover a papelera</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. FLOATING UNDO BANNER (Deshacer instantáneo)
+       ========================================================================= -->
+  <div id="undoFloatingBanner" class="md-undo-banner" style="display: none;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="material-symbols-outlined" style="color: #81c995;">check_circle</span>
+      <span id="undoBannerText" style="font-size: 13.5px; font-weight: 500;">Se enviaron correos a la papelera.</span>
+    </div>
+    <button type="button" id="btnDeshacerAccion" class="md-undo-btn ripple-surface">
+      <span class="material-symbols-outlined" style="font-size: 18px;">undo</span>
+      <span>DESHACER</span>
+    </button>
+  </div>
 
 </main>
 
