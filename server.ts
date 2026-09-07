@@ -10,7 +10,8 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+app.set('trust proxy', 1);
+const PORT = 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const USER_NAME = process.env.USER_NAME || 'Pedro José Pirovani';
 const USER_EMAIL = process.env.USER_EMAIL || 'pirovanipedrojose@gmail.com';
@@ -18,7 +19,7 @@ const USER_EMAIL = process.env.USER_EMAIL || 'pirovanipedrojose@gmail.com';
 // Google OAuth 2.0 Credentials (for Vercel & local development)
 const GOOGLE_CLIENT_ID = process.env.GMAIL_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
-const GOOGLE_REDIRECT_URI = process.env.GMAIL_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI || 'https://gmail-ai-cleaner-nu.vercel.app/auth/google/callback';
+const GOOGLE_REDIRECT_URI = process.env.GMAIL_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI || '/auth/google/callback';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'gmail-ai-cleaner-session-secret-2026';
 
 export interface AppUser {
@@ -61,8 +62,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: NODE_ENV === 'production',
+      secure: 'auto',
       httpOnly: true,
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   })
@@ -1270,13 +1272,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, '0.0.0.0', () => {
-    logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
-    logger.info(`Entorno: ${NODE_ENV} | Total correos en bandeja: ${INBOX_DATABASE.length}`);
-    logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-3.8-flash)' : 'Heurística fallback activa'}`);
-  });
-}
+app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Gmail AI Cleaner v2.0 corriendo en http://0.0.0.0:${PORT}`);
+  logger.info(`Entorno: ${NODE_ENV} | Total correos en bandeja: ${INBOX_DATABASE.length}`);
+  logger.info(`Gemini API: ${process.env.GEMINI_API_KEY ? 'Configurada (gemini-3.8-flash)' : 'Heurística fallback activa'}`);
+});
 
 export default app;
 
