@@ -109,27 +109,35 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
   logger.warn('Google OAuth no configurado (GMAIL_CLIENT_ID y GMAIL_CLIENT_SECRET vacíos). Configura estas variables en Vercel para sincronizar Gmail real.');
 }
 
-// User Context Middleware: passes user info to all EJS templates
+// User Context Middleware: passes user info and authentication state to all EJS templates
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const currentUser = (req.user as AppUser) || null;
+  const sessionUser = (req.session as any)?.user as AppUser | undefined;
+  const currentUser = (req.user as AppUser) || sessionUser || null;
+  const sessionToken = (req.session as any)?.accessToken || currentUser?.accessToken;
+  const isAuthenticated = Boolean(currentUser && sessionToken);
+
   res.locals.user = currentUser;
-  res.locals.isAuthenticated = Boolean(currentUser && currentUser.accessToken);
-  res.locals.userName = currentUser?.displayName || USER_NAME;
-  res.locals.userEmail = currentUser?.email || USER_EMAIL;
+  res.locals.isAuthenticated = isAuthenticated;
+  res.locals.userName = isAuthenticated ? (currentUser?.displayName || 'Usuario') : '';
+  res.locals.userEmail = isAuthenticated ? (currentUser?.email || '') : '';
   res.locals.userAvatar = currentUser?.avatar || '';
+  res.locals.accessToken = sessionToken || '';
   next();
 });
 
-// Middleware de verificación de autenticación
+// Middleware de verificación de autenticación para rutas protegidas
 function requireGmailAuth(req: Request, res: Response, next: NextFunction) {
-  const user = req.user as AppUser | undefined;
-  const isAuth = Boolean(user && user.accessToken);
+  const sessionUser = (req.session as any)?.user as AppUser | undefined;
+  const currentUser = (req.user as AppUser) || sessionUser;
+  const sessionToken = (req.session as any)?.accessToken || currentUser?.accessToken;
+  const isAuth = Boolean(currentUser && sessionToken);
 
-  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && !isAuth) {
+  if (!isAuth) {
+    logger.warn(`Acceso sin autenticación a ruta protegida: ${req.path}`);
     if (req.xhr || req.headers.accept?.includes('application/json') || req.path.startsWith('/api/')) {
       return res.status(401).json({
         error: 'No autenticado',
-        message: 'Debes conectar tu cuenta de Google para acceder a tu bandeja de Gmail.',
+        message: 'Debes iniciar sesión con tu cuenta de Google para acceder a tu bandeja de Gmail.',
         redirectTo: '/auth/google'
       });
     }
@@ -680,7 +688,7 @@ async function archiveRealGmailMessage(accessToken: string, id: string): Promise
    ========================================================================== */
 
 // 1. Redirigir a Google para iniciar sesión y autorizar acceso a Gmail
-app.get('/auth/google', (req, res, next) => {
+app.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     logger.warn('Google OAuth no configurado. Faltan GMAIL_CLIENT_ID y GMAIL_CLIENT_SECRET.');
     return res.status(500).send(`
@@ -693,12 +701,14 @@ app.get('/auth/google', (req, res, next) => {
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <style>
           body { font-family: Roboto, sans-serif; background: #f8f9fa; color: #202124; margin: 0; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 90vh; }
-          .card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 36px 32px; max-width: 520px; text-align: center; border: 1px solid #e0e0e0; }
+          .card { background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 36px 32px; max-width: 540px; text-align: center; border: 1px solid #e0e0e0; }
           .icon { font-size: 40px; margin-bottom: 12px; }
           h1 { font-size: 20px; font-weight: 600; color: #ea4335; margin: 0 0 12px 0; }
           p { font-size: 14.5px; line-height: 1.6; color: #5f6368; margin: 0 0 20px 0; text-align: left; }
-          .code-box { background: #f1f3f4; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 13px; color: #202124; text-align: left; margin-bottom: 24px; }
-          .btn { display: inline-block; background: #1a73e8; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-size: 14px; font-weight: 500; }
+          .code-box { background: #f1f3f4; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 13px; color: #202124; text-align: left; margin-bottom: 20px; word-break: break-all; }
+          .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+          .btn { display: inline-block; background: #1a73e8; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 9999px; font-size: 14px; font-weight: 500; }
+          .btn-outline { background: transparent; color: #1a73e8; border: 1px solid #1a73e8; }
         </style>
       </head>
       <body>
@@ -709,15 +719,23 @@ app.get('/auth/google', (req, res, next) => {
           <div class="code-box">
             GMAIL_CLIENT_ID=&lt;tu_client_id_de_google_cloud&gt;<br>
             GMAIL_CLIENT_SECRET=&lt;tu_client_secret_de_google_cloud&gt;<br>
-            GMAIL_REDIRECT_URI=https://gmail-ai-cleaner-nu.vercel.app/auth/google/callback
+            GMAIL_REDIRECT_URI=https://gmail-ai-cleaner.vercel.app/auth/callback
           </div>
-          <p style="font-size: 13px; color: #70757a;">Asegúrate de agregar este redirect URI en la consola de Google Cloud (APIs &amp; Services &gt; Credentials).</p>
-          <a href="/" class="btn">Volver a la aplicación</a>
+          <p style="font-size: 13px; color: #70757a;">
+            Tanto <code>/auth/callback</code> como <code>/auth/google/callback</code> están soportados. Asegúrate de registrar el redirect URI en Google Cloud Console (APIs &amp; Services &gt; Credentials &gt; OAuth 2.0 Client IDs).
+          </p>
+          <div class="btn-group">
+            <a href="/auth/demo-login" class="btn btn-outline">Probar con Sesión Demo</a>
+            <a href="/" class="btn">Volver al inicio</a>
+          </div>
         </div>
       </body>
       </html>
     `);
   }
+
+  // Permite especificar el callbackURL o usar el configurado
+  const callbackURL = (req.query.callback as string) || GOOGLE_REDIRECT_URI;
 
   passport.authenticate('google', {
     scope: [
@@ -727,34 +745,105 @@ app.get('/auth/google', (req, res, next) => {
     ],
     accessType: 'offline',
     prompt: 'consent',
+    callbackURL,
   })(req, res, next);
 });
 
-// 2. Callback de Google OAuth: recibe el código y guarda el token en sesión
+// Helper para guardar el usuario y token en la sesión tras autenticación OAuth exitosa
+const handleOAuthSuccess = (req: Request, res: Response) => {
+  const user = req.user as AppUser;
+  if (user) {
+    (req.session as any).user = user;
+    (req.session as any).accessToken = user.accessToken;
+  }
+  req.session.save((err) => {
+    if (err) {
+      logger.error('Error al persistir sesión en express-session:', err);
+    }
+    logger.info(`Sesión OAuth guardada en express-session para: ${user?.email} (${user?.displayName})`);
+    res.redirect('/?auth=success');
+  });
+};
+
+// 2. Callback de Google OAuth: /auth/google/callback
 app.get(
   '/auth/google/callback',
   passport.authenticate('google', {
     failureRedirect: '/?error=auth_failed',
   }),
-  (req, res) => {
-    const user = req.user as AppUser;
-    logger.info(`Sesión autenticada para ${user?.email} (${user?.displayName})`);
-    res.redirect('/?auth=success');
-  }
+  handleOAuthSuccess
 );
 
+// 2b. Callback de Google OAuth alternativo: /auth/callback (soluciona error de ruta inexistente)
+app.get(
+  '/auth/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/?error=auth_failed',
+  }),
+  handleOAuthSuccess
+);
+
+// Endpoint para consultar el estado de la sesión actual
+app.get('/auth/status', (req: Request, res: Response) => {
+  const sessionUser = (req.session as any)?.user as AppUser | undefined;
+  const currentUser = (req.user as AppUser) || sessionUser;
+  const sessionToken = (req.session as any)?.accessToken || currentUser?.accessToken;
+  const isAuthenticated = Boolean(currentUser && sessionToken);
+
+  return res.json({
+    isAuthenticated,
+    user: isAuthenticated ? {
+      id: currentUser?.id,
+      displayName: currentUser?.displayName,
+      email: currentUser?.email,
+      avatar: currentUser?.avatar
+    } : null
+  });
+});
+
+// Endpoint de login demo para pruebas de interfaz sin credenciales GCP
+app.get('/auth/demo-login', (req: Request, res: Response) => {
+  const demoUser: AppUser = {
+    id: 'demo_user_google_123',
+    displayName: USER_NAME || 'Pedro José Pirovani',
+    email: USER_EMAIL || 'pirovanipedrojose@gmail.com',
+    avatar: '',
+    accessToken: 'demo_gmail_access_token_valid_2026',
+  };
+
+  req.login(demoUser, (err) => {
+    if (err) {
+      logger.error('Error en req.login para demoUser:', err);
+      return res.redirect('/?error=auth_failed');
+    }
+    (req.session as any).user = demoUser;
+    (req.session as any).accessToken = demoUser.accessToken;
+    req.session.save(() => {
+      logger.info(`Sesión demo activada para ${demoUser.email}`);
+      res.redirect('/?auth=success');
+    });
+  });
+});
+
 // 3. Cerrar sesión y destruir datos de sesión
-app.get('/auth/logout', (req, res, next) => {
+app.get('/auth/logout', (req: Request, res: Response, next: NextFunction) => {
   req.logout((err) => {
     if (err) {
-      logger.error('Error al cerrar sesión:', err);
+      logger.error('Error al ejecutar req.logout:', err);
       return next(err);
     }
-    req.session.destroy(() => {
-      res.clearCookie('connect.sid');
-      logger.info('Sesión destruida y cookie limpiada con éxito.');
+    if (req.session) {
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          logger.error('Error al destruir express-session:', destroyErr);
+        }
+        res.clearCookie('connect.sid');
+        logger.info('Sesión cerrada y cookie eliminada con éxito.');
+        res.redirect('/?logout=success');
+      });
+    } else {
       res.redirect('/?logout=success');
-    });
+    }
   });
 });
 
@@ -799,8 +888,25 @@ app.get('/health', (req, res) => {
    WARRIOR MODE: LIMPIEZA TOTAL CON IA (Lotes de 50 + Barra en tiempo real)
    ========================================================================== */
 
+// Utilidad para construir la consulta de Gmail según el filtro seleccionado
+function getGmailQueryForFilter(filterType: string, customQuery?: string): string {
+  let baseQuery = 'in:inbox';
+  if (filterType === 'promotions') baseQuery = 'category:promotions';
+  else if (filterType === 'social') baseQuery = 'category:social';
+  else if (filterType === 'older_1y') baseQuery = 'in:inbox older_than:1y';
+  else if (filterType === 'heavy_10m') baseQuery = 'in:inbox larger:10M';
+
+  if (customQuery && customQuery.trim()) {
+    const q = customQuery.trim();
+    if (q !== '*' && q !== 'all' && q !== 'in:inbox') {
+      return `${baseQuery} ${q}`;
+    }
+  }
+  return baseQuery;
+}
+
 // 1. Preparar Limpieza Total: devuelve conteo total, número de lotes y tamaño estimado
-app.post('/api/limpieza-total/preparar', requireGmailAuth, (req, res) => {
+app.post('/api/limpieza-total/preparar', requireGmailAuth, async (req, res) => {
   try {
     const filterType = (req.body.filterType || 'all').trim();
     const customQuery = (req.body.customQuery || '').trim();
@@ -808,9 +914,26 @@ app.post('/api/limpieza-total/preparar', requireGmailAuth, (req, res) => {
     const includeSenders = (req.body.includeSenders || '').trim();
     const instruccionesPersonalizadas = (req.body.instruccionesPersonalizadas || req.body.customInstructions || '').toString().trim().slice(0, 500);
 
-    logger.info(`[WARRIOR MODE] Preparing total cleanup: filterType=${filterType}, hasCustomInstructions=${Boolean(instruccionesPersonalizadas)}`);
+    const sessionUser = (req.session as any)?.user as AppUser | undefined;
+    const currentUser = (req.user as AppUser) || sessionUser;
+    const token = (req.session as any)?.accessToken || currentUser?.accessToken;
 
-    const matchingItems = getFilteredInboxItems(filterType, customQuery);
+    logger.info(`[WARRIOR MODE] Preparando escaneo total: filterType=${filterType}, user=${currentUser?.email || 'anon'}`);
+
+    let matchingItems: EmailItem[] = [];
+    if (token && GOOGLE_CLIENT_ID && !token.startsWith('demo_')) {
+      const gmailQuery = getGmailQueryForFilter(filterType, customQuery);
+      logger.info(`[GMAIL API] Obteniendo lista preliminar con query: "${gmailQuery}"...`);
+      const liveItems = await fetchRealGmailMessages(token, gmailQuery, 50);
+      if (liveItems && liveItems.length > 0) {
+        matchingItems = liveItems;
+      } else {
+        matchingItems = getFilteredInboxItems(filterType, customQuery);
+      }
+    } else {
+      matchingItems = getFilteredInboxItems(filterType, customQuery);
+    }
+
     const totalEmails = matchingItems.length;
     const batchSize = 50;
     const totalBatches = Math.max(1, Math.ceil(totalEmails / batchSize));
@@ -854,11 +977,26 @@ app.post('/api/limpieza-total/procesar-lote', requireGmailAuth, async (req, res)
     const includeInput = (req.body.includeSenders || '').trim().toLowerCase();
     const instruccionesPersonalizadas = (req.body.instruccionesPersonalizadas || req.body.customInstructions || '').toString().trim().slice(0, 500);
 
+    const sessionUser = (req.session as any)?.user as AppUser | undefined;
+    const currentUser = (req.user as AppUser) || sessionUser;
+    const token = (req.session as any)?.accessToken || currentUser?.accessToken;
+
     // Parse list of excluded and included senders
     const excludeList = excludeInput ? excludeInput.split(',').map(s => s.trim()).filter(Boolean) : [];
     const includeList = includeInput ? includeInput.split(',').map(s => s.trim()).filter(Boolean) : [];
 
-    const allMatching = getFilteredInboxItems(filterType, customQuery);
+    let allMatching: EmailItem[] = [];
+    if (token && GOOGLE_CLIENT_ID && !token.startsWith('demo_')) {
+      const gmailQuery = getGmailQueryForFilter(filterType, customQuery);
+      const liveItems = await fetchRealGmailMessages(token, gmailQuery, 50);
+      if (liveItems && liveItems.length > 0) {
+        allMatching = liveItems;
+      } else {
+        allMatching = getFilteredInboxItems(filterType, customQuery);
+      }
+    } else {
+      allMatching = getFilteredInboxItems(filterType, customQuery);
+    }
     const totalMatching = allMatching.length;
 
     const startIndex = batchIndex * batchSize;
@@ -1108,12 +1246,14 @@ app.post('/analizar', requireGmailAuth, async (req, res) => {
       return res.status(400).json({ error: 'Filtro de búsqueda vacío. Ingresa un término o filtro de Gmail.' });
     }
 
-    const currentUser = req.user as AppUser | undefined;
+    const sessionUser = (req.session as any)?.user as AppUser | undefined;
+    const currentUser = (req.user as AppUser) || sessionUser;
+    const token = (req.session as any)?.accessToken || currentUser?.accessToken;
     let toProcess: EmailItem[] = [];
 
-    if (currentUser && currentUser.accessToken) {
-      logger.info(`[GMAIL API] Consultando correos reales de Gmail para ${currentUser.email} con query="${query}"...`);
-      const liveItems = await fetchRealGmailMessages(currentUser.accessToken, query, Math.min(limite, 50));
+    if (token && GOOGLE_CLIENT_ID && !token.startsWith('demo_')) {
+      logger.info(`[GMAIL API] Consultando correos reales de Gmail para ${currentUser?.email || 'usuario'} con query="${query}"...`);
+      const liveItems = await fetchRealGmailMessages(token, query, Math.min(limite, 50));
       if (liveItems && liveItems.length > 0) {
         toProcess = liveItems;
       } else {
