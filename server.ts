@@ -735,9 +735,6 @@ app.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
     `);
   }
 
-  // Permite especificar el callbackURL o usar el configurado
-  const callbackURL = (req.query.callback as string) || GOOGLE_REDIRECT_URI;
-
   passport.authenticate('google', {
     scope: [
       'https://www.googleapis.com/auth/userinfo.profile',
@@ -746,7 +743,6 @@ app.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
     ],
     accessType: 'offline',
     prompt: 'consent',
-    callbackURL,
   })(req, res, next);
 });
 

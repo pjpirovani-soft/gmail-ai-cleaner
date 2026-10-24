@@ -34,4 +34,4 @@ Thumbs.db
 coverage/
 
 # PWA generated
-public/sw.js.map
+public/sw.js.map*.bak
