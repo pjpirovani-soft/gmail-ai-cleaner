@@ -8,14 +8,14 @@ Actualizado: 2026-10-24 (fin de sesion CDD)
 - [x] Fase 2: features core (v2.0.0 con OAuth + Gemini + fallback + PWA)
 - [x] Fase 3: v2.1.0 (3 categorias estrictas, instrucciones personalizadas)
 - [x] Documentacion CDD (Bloque 1 + Bloque 2a + Bloque 2b + Bloque 3)
-- [ ] Fase 4: tests (Vitest para clasificador heuristico)
+- [x] Fase 4: tests (Vitest, 15 tests del clasificador heuristico)
 - [ ] Fase 5: configuracion OAuth + Gemini en .env
 
 ## Proximos 3 pasos
 
-1. Configurar .env (GEMINI_API_KEY, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET)
-2. Agregar Vitest + tests del clasificador heuristico
-3. Actualizar multer@1.4.5-lts.1 -> 2.x (CVE)
+1. Configurar .env con GEMINI_API_KEY + GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET (Tarea 3)
+2. Probar con Gmail real (OAuth flow completo)
+3. Refactor server.ts (monolitico -> modulos) o mejoras de UI
 
 ## Bloqueantes
 
@@ -24,9 +24,9 @@ Actualizado: 2026-10-24 (fin de sesion CDD)
 
 ## Deuda pendiente
 
-- multer@1.4.5-lts.1 con CVEs conocidos -> actualizar a 2.x
+- ~~multer@1.4.5-lts.1 con CVEs conocidos -> actualizar a 2.x~~ RESUELTO (commit 9760d58)
 - server.ts monolitico (~1440 lineas) -> refactor a modulos
-- Tests no existen -> agregar Vitest
+- ~~Tests no existen -> agregar Vitest~~ RESUELTO (commits a037a73, 9f80309)
 - README.md promete "Gemini 3.8 Flash" (modelo inexistente) -> corregir
 - server.ts con CRLF -> normalizar cuando haya tests
 

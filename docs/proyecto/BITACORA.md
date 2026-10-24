@@ -58,3 +58,40 @@
 
 - Proyecto creado desde blueprint web-app.
 - Documentacion base generada.
+
+## 2026-10-24 - Sesion de tareas (multer + Vitest)
+
+### Que se hizo
+
+- Tarea 1: multer@1.4.5-lts.1 -> 2.x (CVE-2025-47935, CVE-2025-47944 resueltos)
+- Tarea 2: Vitest + 15 tests del clasificador heuristico
+- Normalizacion de tildes en fallbackClassification (bug encontrado por tests)
+- Documentacion actualizada (SEGURIDAD.md, TESTS.md)
+
+### Commits
+
+- 9760d58 security(deps): actualiza multer a 2.x (CVE-2025-47935, CVE-2025-47944)
+- 04366dd docs(seguridad): marca multer 2.x como resuelto
+- a037a73 test: agrega Vitest con 15 tests del clasificador heuristico
+- 9f80309 docs(tests): actualiza TESTS.md con cobertura real
+
+### Hallazgos
+
+- Vitest 15/15 tests pasan (clasificador heuristico cubierto al 100%)
+- Bug encontrado: fallbackClassification no matcheaba sin tildes
+- Fix: normalizeText() con NFD + quitar diacriticos
+- package.json se corrompio por -replace con newlines (reparado con git checkout + ConvertFrom-Json)
+- multer 2.x funciona sin cambios en server.ts (API de upload.none() compatible)
+
+### Lecciones
+
+- NUNCA usar -replace con regex para modificar package.json (rompe JSON). Usar ConvertFrom-Json/ConvertTo-Json o npm pkg set.
+- Usar C:\Users\Admin\Documents\gmail-ai-cleaner.Path para construir rutas en scripts (no rutas relativas con [System.IO.File])
+- Vitest requiere export explicito de las funciones a testear
+- Tests del clasificador son baratos y de alto valor (logica de negocio core)
+
+### Proximos pasos
+
+1. Configurar .env con GEMINI_API_KEY + GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET (Tarea 3)
+2. Probar con Gmail real (OAuth flow completo)
+3. Considerar refactor de server.ts (monolitico -> modulos)
