@@ -41,7 +41,7 @@ Nunca ejecutar un comando que imprima el VALOR de una key. Solo el NOMBRE.
 
 | Paquete | Version actual | CVE | Accion |
 |---|---|---|---|
-| multer | 1.4.5-lts.1 | Multiples CVEs | URGENTE: actualizar a 2.x |
+| multer | 2.0.x | (resuelto 2026-10-24) | OK Actualizado |
 
 ## OAuth2 - Reglas
 
