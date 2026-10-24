@@ -1,8 +1,15 @@
 # TESTS - gmail-ai-cleaner
 
-## Estado actual
+## Estado actual (2026-10-24)
 
-NO hay tests configurados. package.json no tiene script "test".
+✅ Tests configurados con Vitest.
+✅ 15 tests del clasificador heuristico (fallbackClassification).
+✅ Cobertura del clasificador: 100%.
+
+Comandos:
+- npm test              (corre todos los tests)
+- npm run test:watch    (modo watch)
+- npm run test:coverage (con cobertura)
 
 ## Plan de testing (Vitest)
 
