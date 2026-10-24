@@ -1,97 +1,75 @@
-# Seguridad — gmail-ai-cleaner
-
-## RLS (Row Level Security) — OBLIGATORIO
-
-- **Toda tabla con datos de usuario tiene RLS habilitado.** Sin excepción.
-- Tabla sin RLS = datos abiertos al mundo con la anon key.
-- Políticas: SELECT, INSERT, UPDATE, DELETE separadas. No usar FOR ALL salvo casos simples.
-- Cada política usa uth.uid() o uth.jwt() para identificar al usuario.
-- Testear RLS con pgTAP. Si no se testea, no existe.
-
-## Service Role
-
-- **NUNCA en cliente.** Bypasea RLS. Solo en server actions/API routes.
-- Si una operación necesita service_role, documentar por qué en ARCHITECTURE.md.
-
-## Validación
-
-- **Zod en boundaries:** API routes, server actions, formularios.
-- Validar en servidor, no solo en cliente (cliente se bypasea con DevTools).
-- Schemas compartidos: lib/schema.ts exporta schema + tipo inferido.
-
-## Auth
-
-- **Server-side validation:** usar getClaims() en server, no getSession(). [citation:4]
-- httpOnly cookies para sesión (Supabase lo maneja por defecto).
-- Mensajes de error genéricos en login/registro: 'Email o contraseña inválidos'. No revelar si el email existe.
-- Rate limiting en login/register (ej. 5 intentos por minuto).
-
-## Headers
-
-- CSP, HSTS, X-Frame-Options en 
-ext.config.ts. [citation:4]
-
-## Rate limiting
-
-- Implementar en login, registro, formularios públicos, API routes sensibles.
-- Usar Upstash Redis o similar en producción.
-
-## Git y CI
-
-- Nunca commitear .env* ni secretos.
-- GitHub Actions pinneadas a SHA, no a tags mutables. [citation:5]
-- 
-pm ci en CI, no 
-pm install (reproducible).
-
-## Checklist antes de deploy
-
-- [ ] RLS habilitado en todas las tablas
-- [ ] RLS testeado con pgTAP
-- [ ] Sin service_role en cliente
-- [ ] Zod en todos los boundaries
-- [ ] Auth server-side en rutas protegidas
-- [ ] Rate limiting en login/register
-- [ ] Headers de seguridad configurados
-- [ ] .env.local en .gitignore"
+# SEGURIDAD - gmail-ai-cleaner
 
 ## Regla de oro: keys nunca expuestas
 
-**Nunca ejecutar un comando que imprima el VALOR de una key. Solo el NOMBRE.**
+Nunca ejecutar un comando que imprima el VALOR de una key. Solo el NOMBRE.
 
-### Comandos PROHIBIDOS (exponen valores)
+### Comandos PROHIBIDOS
 
-- `cat .env.local` / `Get-Content .env.local` / `type .env.local` (imprime keys)
-- `git show HEAD:.env.local` (imprime keys del commit)
-- `vercel env pull` sin `--yes` (escribe .env.local con valores reales)
-- `vercel env ls` (la columna 'Value' puede mostrar fragmentos de keys)
-- `echo $env:API_KEY` / `Write-Host $env:API_KEY` (imprime el valor)
-- `printenv` / `env` / `Get-ChildItem Env:` (imprime TODAS las variables)
-- `npm config list` (puede imprimir tokens de registry)
-- `git log -p -- .env*` (imprime diffs con keys)
-- Pasting .env.local en el chat de la IA
+- cat .env / Get-Content .env / type .env
+- git show HEAD:.env
+- vercel env pull sin --yes
+- vercel env ls (puede mostrar fragmentos)
+- echo  / Write-Host 
+- printenv / env / Get-ChildItem Env:
+- npm config list (puede imprimir tokens)
+- git log -p -- .env*
+- Pegar .env en el chat
 
 ### Comandos PERMITIDOS (solo nombres)
 
-- `Get-Content .env.local | ForEach-Object { ($_ -split '=',2)[0] }` (solo nombres)
-- `Select-String -Path .env.local -Pattern '^[A-Z_]+'` (solo nombres)
-- `vercel env ls` con grep a solo nombres: `vercel env ls | Select-String -Pattern '^[A-Z_]+'`n- `git ls-files | Select-String '.env'` (verifica que .env no esté trackeado)
-- `git check-ignore .env.local` (verifica que esté ignorado)
+- Get-Content .env | ForEach-Object { ( -split '=',2)[0] }
+- Select-String -Path .env -Pattern '^[A-Z_]+'
+- git ls-files | Select-String '.env' (verifica que no este trackeado)
+- git check-ignore .env (verifica que este ignorado)
 
-### Regla para la IA
+## Variables de entorno
 
-- Si necesitás una key para un comando, pedile al humano que la ejecute él, o usá una variable de entorno ya cargada (``) SIN imprimirla.
-- Si el humano pega una key en el chat, **no la repitas**. Decile que la rote.
-- Antes de cualquier comando que pueda imprimir keys, preguntate: **¿esto va a mostrar el valor?** Si la respuesta es sí o no sé, no lo ejecutes.
-- En dumps para nuevas sesiones: solo nombres, nunca valores.
+| Variable | Requerida | Uso |
+|---|---|---|
+| GMAIL_CLIENT_ID | Si (para OAuth) | OAuth2 con Google |
+| GMAIL_CLIENT_SECRET | Si (para OAuth) | OAuth2 con Google |
+| GMAIL_REDIRECT_URI | No (default /auth/google/callback) | Callback |
+| GEMINI_API_KEY | No (fallback heuristico) | Clasificacion IA |
+| SESSION_SECRET | Recomendado | Sesiones express-session |
+| PORT | No (default 3000) | Puerto |
+| NODE_ENV | No (default development) | Entorno |
+| USER_NAME | No | Display |
+| USER_EMAIL | No | Display |
 
-### Checklist antes de pegar en el chat
+## Dependencias con vulnerabilidades conocidas
 
-- [ ] No hay strings que empiecen con `eyJ` (JWT de Supabase)
-- [ ] No hay strings que empiecen con `re_` (Resend)
-- [ ] No hay strings que empiecen con `sk-` (OpenAI/Stripe)
-- [ ] No hay strings que empiecen con `ghp_` (GitHub PAT)
-- [ ] No hay passwords en texto plano
-- [ ] No hay connection strings con usuario:password
+| Paquete | Version actual | CVE | Accion |
+|---|---|---|---|
+| multer | 1.4.5-lts.1 | Multiples CVEs | URGENTE: actualizar a 2.x |
 
-**Si ves alguno de estos patrones en un output, NO lo pegues. Rotá la key.**
+## OAuth2 - Reglas
+
+- Scopes minimos: gmail.modify (no usar gmail.full).
+- access_token en sesion server-side, NUNCA en localStorage.
+- httpOnly cookies para sesion.
+- SESSION_SECRET debe ser aleatorio en produccion (no el default del codigo).
+- Redirect URI debe coincidir exactamente con Google Cloud Console.
+
+## Gemini API - Reglas
+
+- GEMINI_API_KEY server-side, NUNCA en cliente.
+- Rate limiting en endpoints que llaman a Gemini (pendiente).
+- Si no hay key, fallback heuristico (no falla).
+
+## Gmail API - Reglas
+
+- Solo operaciones sobre correos del usuario autenticado (users/me).
+- trash: mover a papelera (reversible).
+- modify: quitar label INBOX (archivar, reversible).
+- NUNCA delete permanente sin confirmacion explicita.
+
+## Checklist antes de deploy
+
+- [ ] .env en .gitignore (verificado)
+- [ ] GEMINI_API_KEY no en logs
+- [ ] GMAIL_CLIENT_SECRET no en logs
+- [ ] npm audit --omit=dev sin high/critical
+- [ ] SESSION_SECRET aleatorio en Vercel env vars
+- [ ] Redirect URI coincide con Google Cloud Console
+- [ ] HTTPS en produccion (Vercel lo hace por default)

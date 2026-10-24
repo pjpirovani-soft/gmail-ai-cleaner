@@ -1,44 +1,54 @@
-# Auditoria — gmail-ai-cleaner
+# AUDITORIA - gmail-ai-cleaner
 
-> Checklist obligatorio antes de cada entrega o release. Si algo falla, no se entrega.
+> Checklist obligatorio antes de cada release o deploy.
 
 ## 1. Pre-flight (siempre)
 
-- [ ] npm audit --omit=dev sin vulnerabilidades
-- [ ] npm run lint sin errores ni warnings
-- [ ] npm test todos verdes
-- [ ] npm run build exitoso
 - [ ] git status limpio (todo commiteado)
+- [ ] npm run build exitoso
+- [ ] npm run dev arranca sin errores
+- [ ] GET http://localhost:3000 responde 200
+- [ ] npm audit --omit=dev sin vulnerabilidades high/critical
 
 ## 2. Seguridad
 
-- [ ] RLS habilitado en todas las tablas con datos de usuario
-- [ ] RLS testeado (usuario A no ve datos de B)
-- [ ] Sin service_role en cliente
-- [ ] .env.local en .gitignore, no trackeado
-- [ ] Secrets no expuestos en codigo ni en logs
-- [ ] Headers de seguridad configurados (CSP, HSTS, X-Frame-Options)
-- [ ] Rate limiting en login/register
+- [ ] .env en .gitignore (git check-ignore .env)
+- [ ] GEMINI_API_KEY no aparece en logs
+- [ ] GMAIL_CLIENT_SECRET no aparece en logs
+- [ ] SESSION_SECRET aleatorio en produccion
+- [ ] OAuth scopes minimos (solo gmail.modify)
+- [ ] Redirect URI coincide con Google Cloud Console
+- [ ] HTTPS en produccion
+- [ ] Headers de seguridad (pendiente en server.ts)
 
 ## 3. Dependencias
 
-- [ ] npm outdated revisado (major pendientes documentados)
-- [ ] CVEs conocidos evaluados (dev-only vs produccion)
-- [ ] No aplicar npm audit fix --force sin revisar breaking changes
+- [ ] npm outdated revisado
+- [ ] multer@1.4.5 -> 2.x (URGENTE por CVEs)
+- [ ] CVEs conocidos evaluados
+- [ ] No aplicar npm audit fix --force sin revisar
 
 ## 4. Codigo
 
-- [ ] Sin console.log en produccion
+- [ ] Sin console.log con datos sensibles (usar logger estructurado)
 - [ ] Sin any sin justificar
-- [ ] Sin TODO/FIXME pendientes (o documentados en STATUS)
+- [ ] Sin TODO/FIXME sin documentar en STATUS.md
 - [ ] Sin secretos hardcodeados
+- [ ] server.ts con CRLF (pendiente de normalizar con tests verdes)
 
-## 5. Deploy
+## 5. Frontend
 
-- [ ] Env vars configuradas en Vercel
-- [ ] Dominio funcionando (DNS propagado)
-- [ ] Health check responde
+- [ ] Sin innerHTML con datos del usuario (XSS)
+- [ ] PWA instalable en Android + iOS
+- [ ] Service worker actualiza correctamente
+
+## 6. Deploy (Vercel)
+
+- [ ] Env vars configuradas en dashboard
+- [ ] Health check responde (GET /)
+- [ ] Dominio funcionando
 - [ ] CI verde en el ultimo push
+- [ ] Rollback plan documentado
 
 ## Resultado
 

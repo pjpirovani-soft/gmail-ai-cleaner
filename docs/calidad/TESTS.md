@@ -1,45 +1,54 @@
-# Tests — gmail-ai-cleaner
+# TESTS - gmail-ai-cleaner
 
-## Pirámide de tests
+## Estado actual
 
-1. **Unitarios (Vitest + RTL):** componentes, schemas Zod, utilidades. Rápidos, muchos.
-2. **Integración (Vitest):** server actions, API routes. Mockean Supabase.
-3. **RLS (pgTAP):** políticas de base de datos. Críticos para multi-tenant.
-4. **E2E (Playwright):** flujos completos. Pocos, lentos, críticos.
+NO hay tests configurados. package.json no tiene script "test".
 
-## Unitarios (Vitest + RTL)
+## Plan de testing (Vitest)
 
-- **Componentes:** render, interacción, estado de error, estado de loading.
-- **Schemas Zod:** válido, inválido, borde (campos vacíos, tipos incorrectos).
-- **Server Actions:** éxito, error de validación, error de auth. Mockear createClient().
-- **API Routes:** status codes (200, 400, 401, 500), validación de input, auth.
+### Unitarios (prioridad alta)
 
-## RLS (pgTAP)
+- Clasificador heuristico: funcion pura, facil de testear.
+  - Input: EmailItem
+  - Output: "Conservar" | "Archivar" | "Eliminar"
+  - Casos: newsletter -> Eliminar, factura -> Archivar, jefe -> Conservar, default -> Eliminar
 
-- **Obligatorio para tablas multi-tenant.** Supabase tiene supabase test db.
-- Testear: usuario A NO ve datos de usuario B; usuario A NO puede modificar datos de B.
-- Testear: anon NO puede insertar/update/delete.
-- Testear: cada rol solo accede a lo suyo (comercio solo sus productos, cliente solo su carrito).
+- Parsing de respuesta de Gemini: texto -> categoria.
+  - Casos: "Conservar", "Archivar", "Eliminar", texto invalido -> fallback
 
-## E2E (Playwright)
+### Integracion (prioridad media)
 
-- **Flujos críticos:** login, registro, crear entidad, editar, borrar, derivación a WhatsApp.
-- No testear todo. Solo lo que rompe el negocio si falla.
+- POST /analizar con mock de Gemini SDK.
+- POST /api/limpieza-total/ejecutar en modo simulacion (no toca Gmail).
+
+### E2E (futuro, Playwright)
+
+- Flujo completo: OAuth -> filtro -> analizar -> simular.
+
+## Configuracion
+
+1. Instalar Vitest:
+   npm install -D vitest @vitest/coverage-v8
+
+2. Crear vitest.config.ts:
+   import { defineConfig } from 'vitest/config'
+   export default defineConfig({ test: { environment: 'node' } })
+
+3. Agregar a package.json:
+   "scripts": {
+     "test": "vitest",
+     "test:coverage": "vitest --coverage"
+   }
+
+## Cobertura minima
+
+- Clasificador heuristico: 100% (funcion pura, barato de testear)
+- Endpoints REST: 80%
+- Total: 70%
 
 ## CI (GitHub Actions)
 
-`yaml
-npm ci
-npm run lint
-npm test
-npm run test:rls   # supabase test db
-npm run test:e2e   # playwright
-npm run build
-`
-
-## Reglas
-
-- Tests deben pasar antes de commit.
-- Un test por feature crítica.
-- Testear comportamiento, no implementación.
-- Mockear Supabase en unitarios; usar DB real en RLS.
+- npm ci
+- npm run build
+- npm test
+- (futuro) deploy a Vercel si verde
