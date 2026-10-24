@@ -1,23 +1,47 @@
-# CONVENCIONES — gmail-ai-cleaner
+# CONVENCIONES - gmail-ai-cleaner
 
-## Código
-- TypeScript en server.ts, JS en public/js/.
-- EJS para templates.
-- Material Design 3 (paleta oficial: #1A73E8, #34A853, #EA4335, #FBBC04).
-- Tipografía: Roboto. Iconos: Google Material Symbols.
-- Sin BOM. UTF-8 sin BOM (ver docs/calidad/ENCODING.md).
-- Line endings: LF.
+## Estructura de carpetas
 
-## Commits
-Conventional Commits: feat, fix, docs, chore, security, perf, test.
-Ejemplo: feat(clasificacion): añadir fallback para correos del banco
+- public/ - CSS (Material 3), JS (script.js), manifest, iconos
+- views/ - templates EJS (index.ejs, resultados.ejs, partials/)
+- server.ts - servidor Express + endpoints REST + logica Gemini
+- scripts/ - PowerShell (mantenimiento, dump, verificacion)
+- docs/ - documentacion CDD
 
-## Ramas
-- main → producción (deploy Vercel)
-- feat/xxx → features
-- fix/xxx → fixes
+## Naming
 
-## Scripts PowerShell
-- Nomenclatura: crear-*.ps1, actualizar-*.ps1, verificar-*.ps1, orquestar-*.ps1.
-- Máx 60 líneas por bloque pegado en consola.
-- Ejecutar con powershell -ExecutionPolicy Bypass -File scripts/.../NN.ps1.
+- Archivos TypeScript: kebab-case (server.ts, mi-modulo.ts)
+- Funciones: camelCase (fetchRealGmailMessages)
+- Constantes: SCREAMING_SNAKE_CASE (GEMINI_API_KEY, MAX_RESULTS)
+- Endpoints: kebab-case (/api/limpieza-total, /auth/google/callback)
+- Env vars: SCREAMING_SNAKE_CASE (GMAIL_CLIENT_ID, GEMINI_API_KEY)
+
+## TypeScript
+
+- strict: true siempre.
+- No any. Si no sabes el tipo, usa unknown y narrow.
+- Interfaces para contratos publicos (EmailItem, AppUser).
+- Tipos exportados cuando se usan en multiples modulos.
+
+## Express
+
+- Middlewares en orden: json, urlencoded, multer, static, session, passport, user-context.
+- Rutas protegidas con requireGmailAuth.
+- Logger estructurado (info, debug, warn, error).
+- Respuestas JSON con { error, message } para errores.
+
+## Git
+
+- Encoding: ver docs/calidad/ENCODING.md. UTF-8 sin BOM, LF puro.
+- Conventional Commits: feat:, fix:, docs:, chore:, security:, perf:, test:.
+- Un commit por feature. No mezclar.
+- Mensaje en espanol, sin acentos en el subject.
+- Tests deben pasar antes de commit (cuando existan).
+
+## Docs
+
+- docs/contexto/ - reglas para la IA (ROL, CONVENCIONES, DECISIONES, GLOSARIO, AI-RULES, SESSION-PROTOCOL)
+- docs/proyecto/ - estado del proyecto (ARCHITECTURE, STATUS, SPEC, BITACORA, etc.)
+- docs/calidad/ - ENCODING, SEGURIDAD, TESTS
+- docs/ciclo-de-vida/ - AUDITORIA, CHANGELOG, MANTENIMIENTO
+- docs/audits/ - hallazgos de auditoria (fecha-nombre.md)
