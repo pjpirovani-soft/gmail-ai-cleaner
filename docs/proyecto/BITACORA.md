@@ -95,3 +95,35 @@
 1. Configurar .env con GEMINI_API_KEY + GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET (Tarea 3)
 2. Probar con Gmail real (OAuth flow completo)
 3. Considerar refactor de server.ts (monolitico -> modulos)
+
+## 2026-10-24 - Bloque A (saneamiento documental)
+
+### Que se hizo
+
+- README.md: "Gemini 3.8 Flash" -> "Gemini 2.5 Flash" (modelo inexistente)
+- SESSION-STATE.md: reescrito al estado real (Fase 5 pendiente, tests OK, multer OK)
+- AUDITORIA.md: multer 2.x marcado como resuelto (commit 9760d58)
+- DATABASE.md: fences rotos (\\\ ypescript) -> `	ypescript validos de Markdown
+- 4 scripts nuevos en scripts/ (actualizar-readme-gemini, actualizar-session-state, actualizar-auditoria-multer, actualizar-database-fences)
+
+### Commits
+
+- bacf4ec docs: sincroniza README, SESSION-STATE, AUDITORIA y DATABASE con estado real
+
+### Hallazgos
+
+- DATABASE.md tenia fences con backslashes (\\\ en vez de `), no se renderizaban como code blocks
+- Script inicial de fences fallo (regex esperaba backticks, archivo tenia backslashes) - corregido
+- API.md verificado: no tiene el mismo bug
+
+### Lecciones
+
+- Verificar SIEMPRE la forma exacta del texto a reemplazar (Get-Content con Skip/First) antes de escribir regex
+- PowerShell en modo multilinea (>>) es fragil con texto que empieza con - o [
+- VS Code con files.encoding=utf8 + files.eol=\n evita BOM y CRLF por default
+
+### Proximos pasos
+
+1. Fase 5: configurar .env con GEMINI_API_KEY + GMAIL_CLIENT_ID + GMAIL_CLIENT_SECRET
+2. Probar OAuth flow completo con Gmail real
+3. Decidir Bloque C: rate limiting (recomendado) vs helmet vs refactor server.ts
