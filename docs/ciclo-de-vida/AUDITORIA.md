@@ -24,7 +24,7 @@
 ## 3. Dependencias
 
 - [ ] npm outdated revisado
-- [ ] multer@1.4.5 -> 2.x (URGENTE por CVEs)
+- [x] multer@1.4.5 -> 2.x (RESUELTO 2026-10-24, ver SEGURIDAD.md)
 - [ ] CVEs conocidos evaluados
 - [ ] No aplicar npm audit fix --force sin revisar
 

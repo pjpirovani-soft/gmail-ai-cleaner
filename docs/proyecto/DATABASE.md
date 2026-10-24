@@ -15,7 +15,7 @@
 
 ### EmailItem
 
-\\\	ypescript
+```typescript
 interface EmailItem {
   id: string;
   remitente: string;
@@ -30,11 +30,10 @@ interface EmailItem {
   inTrash?: boolean;
   archived?: boolean;
 }
-\\\
-
+```
 ### AppUser
 
-\\\	ypescript
+```typescript
 interface AppUser {
   id: string;
   displayName: string;
@@ -43,8 +42,7 @@ interface AppUser {
   accessToken: string;
   refreshToken?: string;
 }
-\\\
-
+```
 ## Persistencia de sesion
 
 - express-session con MemoryStore (default).

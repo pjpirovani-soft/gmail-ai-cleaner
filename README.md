@@ -55,7 +55,7 @@
   - Filtros directos con un solo clic: `older_than:1y` (antiguos), `from:newsletter` (boletines), `larger:10M` (pesados) y `from:ofertas`.
   - Soporte de sintaxis nativa de Gmail combinable.
 - **🤖 Clasificación con Gemini AI**:
-  - Evaluación semántica del asunto, remitente y contenido mediante el modelo **Gemini 3.8 Flash**.
+  - Evaluación semántica del asunto, remitente y contenido mediante el modelo **Gemini 2.5 Flash**.
   - Clasificación en las 3 categorías estrictas: **"ÚTIL" (Conservar)**, **"ARCHIVABLE" (Archivar)** y **"DESECHABLE" (Eliminar)**.
   - Motor heurístico inteligente de respaldo en caso de no contar con clave de API.
 - **📊 Panel de Métricas y Resumen**:
