@@ -368,15 +368,16 @@ interface UndoRecord {
 let lastUndoRecord: UndoRecord | null = null;
 
 // Heuristic rule-based classifier aligned with strict 3-tier categorization
-function fallbackClassification(
+export function fallbackClassification(
   correo: { asunto: string; remitente: string; resumen: string },
   instruccionesPersonalizadas?: string
 ): 'Eliminar' | 'Archivar' | 'Conservar' {
-  const text = `${correo.remitente} ${correo.asunto} ${correo.resumen}`.toLowerCase();
+  const normalizeText = (s: string): string => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const text = normalizeText(`${correo.remitente} ${correo.asunto} ${correo.resumen}`);
   
   // 1. Prioritize user custom instructions if present
   if (instruccionesPersonalizadas && instruccionesPersonalizadas.trim()) {
-    const inst = instruccionesPersonalizadas.toLowerCase();
+    const inst = normalizeText(instruccionesPersonalizadas);
     
     // Protection heuristics (boss, bank, work, family, essential services)
     if ((inst.includes('no elimines') || inst.includes('no borrar') || inst.includes('conserva') || inst.includes('no tocar')) &&
@@ -405,7 +406,7 @@ function fallbackClassification(
   const isUtil = 
     text.includes('jefe') || text.includes('balance de equipo') || text.includes('minuta oficial') ||
     text.includes('banco') || text.includes('token dinámica') || text.includes('transferencia') ||
-    text.includes('código de verificación') || text.includes('alerta de seguridad') ||
+    text.includes('codigo de verificacion') || text.includes('alerta de seguridad') ||
     text.includes('recursos humanos') || text.includes('liquidación salarial') || text.includes('recibo de nómina') ||
     text.includes('afip') || text.includes('inscripción fiscal') || text.includes('pase de abordar') ||
     text.includes('vuelos-checkin') || text.includes('familia@') || text.includes('reunión familiar') ||
@@ -423,7 +424,7 @@ function fallbackClassification(
   // - Notificaciones de servicios que se usan (no urgentes)
   // - Reservas de hotel o viajes pasados
   const isArchivable = 
-    text.includes('confirmación de reserva') || text.includes('reserva de alojamiento') ||
+    text.includes('confirmacion de reserva') || text.includes('reserva de alojamiento') ||
     text.includes('factura pagada') || text.includes('recibo histórico') || text.includes('entradas para') ||
     text.includes('grabación disponible') || text.includes('webinar de arquitectura') ||
     text.includes('backup de video') || text.includes('planos cad') || text.includes('presentación ejecutiva') ||
